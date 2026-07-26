@@ -1,0 +1,38 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ---- Node / Next.js ----
+node_modules/
+.next/
+out/
+.turbo/
+*.tsbuildinfo
+
+# ---- Environment ----
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ---- Runtime data (regenerated, never committed) ----
+backend/ml/artifacts/*.joblib
+backend/ml/artifacts/*.png
+chroma_store/
+uploads/
+*.log
+
+# ---- OS / editors ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
