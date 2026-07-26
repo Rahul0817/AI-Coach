@@ -185,8 +185,11 @@ class AgentOrchestrator:
             yield {"type": "token", "content": verdict.response or ""}
             yield {
                 "type": "done",
-                "data": {"content": verdict.response or "", "tokens": 0,
-                         "safety": verdict.category},
+                "data": {
+                    "content": verdict.response or "",
+                    "tokens": 0,
+                    "safety": verdict.category,
+                },
             }
             return
 
@@ -231,8 +234,7 @@ class AgentOrchestrator:
             yield {
                 "type": "error",
                 "content": (
-                    "The response was interrupted. Please try sending your "
-                    "message again."
+                    "The response was interrupted. Please try sending your message again."
                 ),
             }
             return

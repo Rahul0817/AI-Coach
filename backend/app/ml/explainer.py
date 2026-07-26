@@ -99,8 +99,9 @@ class RiskExplainer:
                 # single median row, which still yields valid (if lower
                 # variance) attributions.
                 medians = self._predictor.feature_medians()
-                background = pd.DataFrame([[medians[f] for f in FEATURE_ORDER]],
-                                          columns=FEATURE_ORDER)
+                background = pd.DataFrame(
+                    [[medians[f] for f in FEATURE_ORDER]], columns=FEATURE_ORDER
+                )
             self._background = background
 
             pipeline = self._predictor.pipeline
@@ -176,7 +177,7 @@ class RiskExplainer:
         """Rank contributions and attach human-readable explanations."""
         row = frame.iloc[0]
         ranked = sorted(
-            zip(FEATURE_ORDER, shap_row),
+            zip(FEATURE_ORDER, shap_row, strict=True),
             key=lambda pair: abs(pair[1]),
             reverse=True,
         )[:TOP_K]
@@ -187,7 +188,9 @@ class RiskExplainer:
             increases = shap_value > 0
             text = spec.increase_text if increases else spec.decrease_text
             if approximate:
-                text += " (Estimated contribution — detailed attribution was unavailable.)"
+                text += (
+                    " (Estimated contribution — detailed attribution was unavailable.)"
+                )
 
             value = float(row[name])
             out.append(
@@ -207,8 +210,14 @@ class RiskExplainer:
         """Render a raw feature value the way a person would read it."""
         spec = FEATURE_SPECS[name]
         if name in {
-            "cycle_irregularity", "weight_gain", "hair_growth", "skin_darkening",
-            "hair_loss", "pimples", "fast_food", "family_history",
+            "cycle_irregularity",
+            "weight_gain",
+            "hair_growth",
+            "skin_darkening",
+            "hair_loss",
+            "pimples",
+            "fast_food",
+            "family_history",
         }:
             return "Yes" if value >= 0.5 else "No"
         if name in {"androgenic_symptom_count", "activity_score", "stress_level"}:
@@ -221,10 +230,12 @@ class RiskExplainer:
     def summarise(self, risk_score: float, band: str, factors: list[dict]) -> str:
         """One-paragraph plain-language summary of the assessment."""
         percentage = round(risk_score * 100)
-        drivers = [f["display_name"].lower() for f in factors
-                   if f["direction"] == "increases"][:3]
-        protective = [f["display_name"].lower() for f in factors
-                      if f["direction"] == "decreases"][:2]
+        drivers = [
+            f["display_name"].lower() for f in factors if f["direction"] == "increases"
+        ][:3]
+        protective = [
+            f["display_name"].lower() for f in factors if f["direction"] == "decreases"
+        ][:2]
 
         band_text = {
             "low": (
@@ -249,12 +260,11 @@ class RiskExplainer:
         if drivers:
             parts.append(
                 "The factors pushing the estimate up the most were "
-                + _join(drivers) + "."
+                + _join(drivers)
+                + "."
             )
         if protective:
-            parts.append(
-                "Working in your favour: " + _join(protective) + "."
-            )
+            parts.append("Working in your favour: " + _join(protective) + ".")
         return " ".join(parts)
 
     def recommendations(self, band: str, factors: list[dict]) -> list[str]:
@@ -269,31 +279,31 @@ class RiskExplainer:
 
         playbook = {
             "bmi": "Aim for a gradual 5–10% reduction in body weight if you are above "
-                   "a healthy range — even that much is repeatedly associated with "
-                   "more regular cycles.",
+            "a healthy range — even that much is repeatedly associated with "
+            "more regular cycles.",
             "metabolic_load": "Prioritise lower-glycaemic meals: pair carbohydrates "
-                              "with protein and fibre to blunt blood-sugar spikes.",
+            "with protein and fibre to blunt blood-sugar spikes.",
             "fast_food": "Replace two fast-food meals a week with home-cooked, "
-                         "high-fibre alternatives.",
+            "high-fibre alternatives.",
             "exercise_hours_per_week": "Build toward 150 minutes of moderate activity "
-                                       "a week; resistance training twice weekly is "
-                                       "especially effective for insulin sensitivity.",
+            "a week; resistance training twice weekly is "
+            "especially effective for insulin sensitivity.",
             "activity_score": "Add a 20-minute daily walk — the easiest reliable win "
-                              "for insulin sensitivity.",
+            "for insulin sensitivity.",
             "lifestyle_score": "Pick the single weakest of sleep, movement and stress "
-                               "and improve just that one for two weeks.",
+            "and improve just that one for two weeks.",
             "sleep_hours": "Target 7–9 hours a night with a consistent wake time; "
-                           "short sleep measurably worsens insulin resistance.",
+            "short sleep measurably worsens insulin resistance.",
             "stress_level": "Add a daily 10-minute wind-down routine — breathing, "
-                            "stretching or journalling all count.",
+            "stretching or journalling all count.",
             "cycle_length_days": "Log every cycle in Oviora. Three months of data makes "
-                                 "a clinical conversation far more productive.",
+            "a clinical conversation far more productive.",
             "cycle_deviation": "Track your cycle consistently so you can show a "
-                               "clinician the actual pattern rather than a recollection.",
+            "clinician the actual pattern rather than a recollection.",
             "cycle_irregularity": "Bring at least three months of cycle logs to your "
-                                  "next appointment.",
+            "next appointment.",
             "pimples": "Persistent adult acne is worth raising with a dermatologist "
-                       "alongside your gynaecologist.",
+            "alongside your gynaecologist.",
         }
 
         for factor in raising:

@@ -18,7 +18,7 @@ from __future__ import annotations
 import hashlib
 import secrets
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
 
 from jose import JWTError, jwt
@@ -64,7 +64,7 @@ def _create_token(
     expires_delta: timedelta,
     extra_claims: dict[str, Any] | None = None,
 ) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload: dict[str, Any] = {
         "sub": str(subject),
         "type": token_type,
@@ -78,9 +78,7 @@ def _create_token(
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
 
-def create_access_token(
-    subject: str, extra_claims: dict[str, Any] | None = None
-) -> str:
+def create_access_token(subject: str, extra_claims: dict[str, Any] | None = None) -> str:
     return _create_token(
         subject,
         "access",
@@ -127,7 +125,7 @@ def token_expiry_seconds(payload: dict[str, Any]) -> int:
     exp = payload.get("exp")
     if not exp:
         return 0
-    return max(0, int(exp - datetime.now(timezone.utc).timestamp()))
+    return max(0, int(exp - datetime.now(UTC).timestamp()))
 
 
 def generate_reset_token() -> tuple[str, str]:

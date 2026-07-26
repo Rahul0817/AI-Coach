@@ -28,7 +28,6 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.types import GUID
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import (
     HabitFrequency,
@@ -38,6 +37,7 @@ from app.models.enums import (
     MoodLabel,
     WorkoutType,
 )
+from app.models.types import GUID
 
 if TYPE_CHECKING:  # pragma: no cover
     from app.models.user import User
@@ -62,8 +62,8 @@ class Habit(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     colour: Mapped[str] = mapped_column(String(16), default="#8b5cf6", nullable=False)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
-    user: Mapped["User"] = relationship(back_populates="habits")
-    entries: Mapped[list["HabitEntry"]] = relationship(
+    user: Mapped[User] = relationship(back_populates="habits")
+    entries: Mapped[list[HabitEntry]] = relationship(
         back_populates="habit", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -87,7 +87,7 @@ class HabitEntry(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     completed_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     note: Mapped[str | None] = mapped_column(String(300), nullable=True)
 
-    habit: Mapped["Habit"] = relationship(back_populates="entries")
+    habit: Mapped[Habit] = relationship(back_populates="entries")
 
 
 class MealLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
@@ -121,7 +121,7 @@ class MealLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="meals")
+    user: Mapped[User] = relationship(back_populates="meals")
 
 
 class WorkoutLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
@@ -145,7 +145,7 @@ class WorkoutLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     calories_burned: Mapped[float | None] = mapped_column(Float, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="workouts")
+    user: Mapped[User] = relationship(back_populates="workouts")
 
 
 class WaterLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
@@ -161,7 +161,7 @@ class WaterLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     millilitres: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     goal_millilitres: Mapped[int] = mapped_column(Integer, default=2500, nullable=False)
 
-    user: Mapped["User"] = relationship(back_populates="water_logs")
+    user: Mapped[User] = relationship(back_populates="water_logs")
 
     @property
     def goal_percentage(self) -> float:
@@ -191,7 +191,7 @@ class SleepLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="sleep_logs")
+    user: Mapped[User] = relationship(back_populates="sleep_logs")
 
 
 class WeightLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
@@ -208,7 +208,7 @@ class WeightLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     body_fat_percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
     waist_cm: Mapped[float | None] = mapped_column(Float, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="weight_logs")
+    user: Mapped[User] = relationship(back_populates="weight_logs")
 
 
 class MoodLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
@@ -229,7 +229,7 @@ class MoodLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     stress_level: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     journal: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="mood_logs")
+    user: Mapped[User] = relationship(back_populates="mood_logs")
 
     #: Numeric encoding so moods can be averaged on charts.
     MOOD_SCORES = {

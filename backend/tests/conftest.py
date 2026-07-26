@@ -29,7 +29,9 @@ import pytest
 # Configure the environment *before* importing anything from `app`, since
 # settings are read at import time and cached.
 os.environ.setdefault("ENVIRONMENT", "development")
-os.environ.setdefault("SECRET_KEY", "test-secret-key-not-used-outside-the-suite-0123456789")
+os.environ.setdefault(
+    "SECRET_KEY", "test-secret-key-not-used-outside-the-suite-0123456789"
+)
 os.environ.setdefault("LLM_PROVIDER", "local")
 os.environ.setdefault("EMBEDDING_PROVIDER", "local")
 os.environ.setdefault("RATE_LIMIT_ENABLED", "false")
@@ -83,9 +85,9 @@ async def client(db_path: Path) -> AsyncIterator:
     """A TestClient wired to an isolated database, with lifespan run."""
     from fastapi.testclient import TestClient
 
+    import app.core.redis_client as redis_module
     from app.core.database import configure_engine
     from app.core.redis_client import CacheService, InMemoryBackend
-    import app.core.redis_client as redis_module
 
     configure_engine(f"sqlite+aiosqlite:///{db_path}")
     # Force the in-process cache so the suite never depends on a Redis daemon
@@ -124,11 +126,21 @@ def auth_headers(client, user_payload: dict) -> dict[str, str]:
 def sample_risk_payload() -> dict:
     """A high-risk feature vector for prediction tests."""
     return {
-        "age": 24, "bmi": 31.2, "cycle_length_days": 48,
-        "cycle_irregularity": 1, "weight_gain": 1, "hair_growth": 1,
-        "skin_darkening": 1, "hair_loss": 1, "pimples": 1, "fast_food": 1,
-        "exercise_hours_per_week": 0.5, "sleep_hours": 5.5,
-        "stress_level": 5, "family_history": 1, "activity_level": "sedentary",
+        "age": 24,
+        "bmi": 31.2,
+        "cycle_length_days": 48,
+        "cycle_irregularity": 1,
+        "weight_gain": 1,
+        "hair_growth": 1,
+        "skin_darkening": 1,
+        "hair_loss": 1,
+        "pimples": 1,
+        "fast_food": 1,
+        "exercise_hours_per_week": 0.5,
+        "sleep_hours": 5.5,
+        "stress_level": 5,
+        "family_history": 1,
+        "activity_level": "sedentary",
     }
 
 
@@ -136,9 +148,19 @@ def sample_risk_payload() -> dict:
 def low_risk_payload() -> dict:
     """A low-risk feature vector, used to assert the model discriminates."""
     return {
-        "age": 23, "bmi": 21.5, "cycle_length_days": 28,
-        "cycle_irregularity": 0, "weight_gain": 0, "hair_growth": 0,
-        "skin_darkening": 0, "hair_loss": 0, "pimples": 0, "fast_food": 0,
-        "exercise_hours_per_week": 6.0, "sleep_hours": 8.0,
-        "stress_level": 2, "family_history": 0, "activity_level": "active",
+        "age": 23,
+        "bmi": 21.5,
+        "cycle_length_days": 28,
+        "cycle_irregularity": 0,
+        "weight_gain": 0,
+        "hair_growth": 0,
+        "skin_darkening": 0,
+        "hair_loss": 0,
+        "pimples": 0,
+        "fast_food": 0,
+        "exercise_hours_per_week": 6.0,
+        "sleep_hours": 8.0,
+        "stress_level": 2,
+        "family_history": 0,
+        "activity_level": "active",
     }

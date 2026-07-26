@@ -43,7 +43,7 @@ from app.ai.memory.extractor import extract_facts
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.core.redis_client import CacheService, get_cache
-from app.models.chat import Conversation, Message
+from app.models.chat import Conversation
 from app.models.enums import MessageRole
 from app.repositories.chat import MessageRepository
 from app.repositories.user import ProfileRepository
@@ -148,9 +148,7 @@ class ConversationMemory:
         if not new_material:
             return conversation.summary
 
-        transcript = "\n".join(
-            f"{m.role}: {m.content[:600]}" for m in new_material
-        )
+        transcript = "\n".join(f"{m.role}: {m.content[:600]}" for m in new_material)
         instruction = (
             "You are maintaining a running summary of a PCOS coaching "
             "conversation. Merge the new exchange into the existing summary. "
@@ -185,9 +183,7 @@ class ConversationMemory:
         return summary
 
     # ------------------------------------------------------------ tier 3 ---
-    async def learn_from_message(
-        self, user_id: uuid.UUID, text: str
-    ) -> dict[str, Any]:
+    async def learn_from_message(self, user_id: uuid.UUID, text: str) -> dict[str, Any]:
         """Extract durable facts from a user turn and persist them.
 
         Returns the facts that were newly learned, which the API echoes back so

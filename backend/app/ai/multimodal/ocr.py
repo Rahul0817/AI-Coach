@@ -152,16 +152,15 @@ def _tesseract_image(image) -> tuple[str, float | None]:  # type: ignore[no-unty
     text = pytesseract.image_to_string(image)
     confidence: float | None = None
     try:
-        data = pytesseract.image_to_data(
-            image, output_type=pytesseract.Output.DICT
-        )
+        data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
         scores = [int(c) for c in data.get("conf", []) if str(c).lstrip("-").isdigit()]
         # Tesseract emits -1 for non-text regions; including them would drag the
         # reported confidence down for no reason.
         scores = [s for s in scores if s >= 0]
         if scores:
             confidence = round(sum(scores) / len(scores) / 100, 3)
-    except Exception:
+    except Exception:  # noqa: S110 - confidence is optional metadata; a
+        # failure to compute it must not discard successfully extracted text.
         pass
     return text, confidence
 
@@ -214,7 +213,7 @@ def parse_biomarkers(text: str) -> list[ParsedBiomarker]:
             unit = value_match.group(2)
         else:
             # No unit printed. Take the first standalone number after the label.
-            after_label = window[value_match.end():] if value_match else window
+            after_label = window[value_match.end() :] if value_match else window
             numbers = re.findall(_NUMBER, after_label or window)
             raw_value = _to_float(numbers[0]) if numbers else None
             unit = spec.canonical_unit
@@ -229,7 +228,7 @@ def parse_biomarkers(text: str) -> list[ParsedBiomarker]:
         low = high = None
         # Search after the measured value so the value itself is not mistaken
         # for the lower bound of its own range.
-        tail = window[value_match.end():] if value_match else window
+        tail = window[value_match.end() :] if value_match else window
         for pattern in _RANGE_PATTERNS:
             range_match = pattern.search(tail)
             if range_match:
@@ -339,7 +338,10 @@ def tesseract_version() -> str | None:  # pragma: no cover - environment depende
     try:
         output = subprocess.run(
             [settings.tesseract_cmd, "--version"],
-            capture_output=True, text=True, timeout=5, check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
         )
         return output.stdout.splitlines()[0] if output.stdout else None
     except Exception:

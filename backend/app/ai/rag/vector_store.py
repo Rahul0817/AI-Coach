@@ -30,7 +30,9 @@ class VectorStore(ABC):
     """Minimal vector-store contract used by the retriever."""
 
     @abstractmethod
-    async def upsert(self, chunks: list[DocumentChunk], vectors: list[list[float]]) -> None: ...
+    async def upsert(
+        self, chunks: list[DocumentChunk], vectors: list[list[float]]
+    ) -> None: ...
 
     @abstractmethod
     async def query(
@@ -56,8 +58,10 @@ class InMemoryVectorStore(VectorStore):
         self._documents: list[str] = []
         self._metadatas: list[dict[str, str]] = []
 
-    async def upsert(self, chunks: list[DocumentChunk], vectors: list[list[float]]) -> None:
-        for chunk, vector in zip(chunks, vectors):
+    async def upsert(
+        self, chunks: list[DocumentChunk], vectors: list[list[float]]
+    ) -> None:
+        for chunk, vector in zip(chunks, vectors, strict=True):
             if chunk.id in self._ids:
                 index = self._ids.index(chunk.id)
                 self._vectors[index] = vector
@@ -79,7 +83,7 @@ class InMemoryVectorStore(VectorStore):
             if category and self._metadatas[index].get("category") != category:
                 continue
             norm_c = math.sqrt(sum(v * v for v in candidate)) or 1.0
-            dot = sum(a * b for a, b in zip(vector, candidate))
+            dot = sum(a * b for a, b in zip(vector, candidate, strict=True))
             scored.append((dot / (norm_q * norm_c), index))
 
         scored.sort(key=lambda pair: pair[0], reverse=True)
@@ -105,7 +109,7 @@ class InMemoryVectorStore(VectorStore):
     async def all_chunks(self) -> list[dict[str, Any]]:
         return [
             {"id": i, "text": t, "metadata": m}
-            for i, t, m in zip(self._ids, self._documents, self._metadatas)
+            for i, t, m in zip(self._ids, self._documents, self._metadatas, strict=True)
         ]
 
 
@@ -116,7 +120,9 @@ class ChromaVectorStore(VectorStore):
         self._client = client
         self._collection = collection
 
-    async def upsert(self, chunks: list[DocumentChunk], vectors: list[list[float]]) -> None:
+    async def upsert(
+        self, chunks: list[DocumentChunk], vectors: list[list[float]]
+    ) -> None:
         if not chunks:
             return
         self._collection.upsert(
@@ -143,7 +149,9 @@ class ChromaVectorStore(VectorStore):
         distances = result.get("distances", [[]])[0]
 
         out: list[dict[str, Any]] = []
-        for identifier, text, metadata, distance in zip(ids, documents, metadatas, distances):
+        for identifier, text, metadata, distance in zip(
+            ids, documents, metadatas, distances, strict=True
+        ):
             # Chroma's default space is cosine *distance* (1 - similarity).
             # Converting here keeps every store returning "higher is better".
             similarity = 1.0 - float(distance)
@@ -175,6 +183,7 @@ class ChromaVectorStore(VectorStore):
                 result.get("ids", []),
                 result.get("documents", []),
                 result.get("metadatas", []),
+                strict=True,
             )
         ]
 

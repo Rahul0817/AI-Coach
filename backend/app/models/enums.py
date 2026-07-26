@@ -8,14 +8,12 @@ product add, say, a new mood label without a schema change.
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
-
-class StrEnum(str, Enum):
-    """Serialises as its value in JSON while remaining comparable to ``str``."""
-
-    def __str__(self) -> str:  # pragma: no cover - trivial
-        return str(self.value)
+# ``enum.StrEnum`` (3.11+) gives exactly the semantics these need: members
+# compare equal to their string value, serialise as that value, and ``str()``
+# returns it — so no hand-rolled ``str, Enum`` mixin is required.
+__all__ = ["StrEnum"]
 
 
 class ActivityLevel(StrEnum):

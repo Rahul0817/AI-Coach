@@ -15,8 +15,14 @@ MAX_PASSWORD_LENGTH = 72  # bcrypt's hard limit — see core.security
 
 _COMMON_PASSWORDS = frozenset(
     {
-        "password12", "password123", "qwerty1234", "1234567890",
-        "letmein123", "welcome123", "iloveyou12", "admin12345",
+        "password12",
+        "password123",
+        "qwerty1234",
+        "1234567890",
+        "letmein123",
+        "welcome123",
+        "iloveyou12",
+        "admin12345",
     }
 )
 
@@ -80,7 +86,7 @@ class LoginRequest(BaseModel):
 class TokenPair(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str = "bearer"
+    token_type: str = "bearer"  # noqa: S105 - the OAuth2 scheme name
     expires_in: int = Field(..., description="Access token lifetime in seconds.")
 
 

@@ -107,9 +107,7 @@ class ReportService:
             )
 
         out_of_range = [b for b in result.biomarkers if b.flag.value in {"high", "low"}]
-        lines = [
-            f"Read {len(result.biomarkers)} biomarker(s) from this report."
-        ]
+        lines = [f"Read {len(result.biomarkers)} biomarker(s) from this report."]
         if out_of_range:
             names = ", ".join(f"{b.display_name} ({b.flag.value})" for b in out_of_range)
             lines.append(

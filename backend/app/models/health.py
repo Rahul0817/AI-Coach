@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import date
 from typing import TYPE_CHECKING
 
@@ -19,9 +18,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.types import JSONDict
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import FlowIntensity, RiskBand
+from app.models.types import JSONDict
 
 if TYPE_CHECKING:  # pragma: no cover
     from app.models.user import User
@@ -59,7 +58,7 @@ class CycleLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     pain_level: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0–10
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="cycles")
+    user: Mapped[User] = relationship(back_populates="cycles")
 
     @property
     def is_irregular(self) -> bool:
@@ -90,7 +89,7 @@ class SymptomLog(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     severity: Mapped[int] = mapped_column(Integer, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="symptoms")
+    user: Mapped[User] = relationship(back_populates="symptoms")
 
 
 class Prediction(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
@@ -125,7 +124,7 @@ class Prediction(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     )
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="predictions")
+    user: Mapped[User] = relationship(back_populates="predictions")
 
     @staticmethod
     def band_for(score: float) -> RiskBand:

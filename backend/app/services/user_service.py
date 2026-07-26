@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -47,9 +47,7 @@ class UserService:
         await self.session.commit()
         return profile
 
-    async def update_profile(
-        self, user_id: uuid.UUID, payload: ProfileUpdate
-    ) -> Profile:
+    async def update_profile(self, user_id: uuid.UUID, payload: ProfileUpdate) -> Profile:
         profile = await self.profiles.get_or_create(user_id)
         updates = payload.model_dump(exclude_unset=True)
 
@@ -125,9 +123,7 @@ class UserService:
         symptoms = await SymptomRepository(self.session).list_between(
             user_id, start, end, limit=5000
         )
-        predictions = await PredictionRepository(self.session).history(
-            user_id, limit=200
-        )
+        predictions = await PredictionRepository(self.session).history(user_id, limit=200)
         meals = await MealRepository(self.session).list_between(
             user_id, start, end, limit=5000
         )
@@ -147,9 +143,9 @@ class UserService:
             user_id, start, end, limit=1000
         )
         habits = await HabitRepository(self.session).list_active(user_id)
-        reports = await BloodReportRepository(
-            self.session
-        ).list_for_user_with_biomarkers(user_id, limit=100)
+        reports = await BloodReportRepository(self.session).list_for_user_with_biomarkers(
+            user_id, limit=100
+        )
 
         conversation_repo = ConversationRepository(self.session)
         message_repo = MessageRepository(self.session)
@@ -181,16 +177,14 @@ class UserService:
             )
 
         return {
-            "exported_at": datetime.now(timezone.utc),
+            "exported_at": datetime.now(UTC),
             "user": {
                 "id": str(user.id),
                 "email": user.email,
                 "full_name": user.full_name,
                 "created_at": user.created_at.isoformat(),
             },
-            "profile": (
-                self.serialise_profile(user.profile) if user.profile else None
-            ),
+            "profile": (self.serialise_profile(user.profile) if user.profile else None),
             "cycles": [row.to_dict() for row in cycles],
             "symptoms": [row.to_dict() for row in symptoms],
             "predictions": [row.to_dict() for row in predictions],

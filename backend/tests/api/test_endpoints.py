@@ -328,7 +328,9 @@ class TestPrediction:
         assert body["recommendations"]
         assert "healthcare professional" in body["disclaimer"]
 
-    def test_out_of_range_input_rejected(self, client, auth_headers, sample_risk_payload) -> None:
+    def test_out_of_range_input_rejected(
+        self, client, auth_headers, sample_risk_payload
+    ) -> None:
         response = client.post(
             "/api/v1/predict",
             headers=auth_headers,
@@ -373,7 +375,11 @@ class TestTracking:
         response = client.post(
             "/api/v1/workouts",
             headers=auth_headers,
-            json={"title": "Strength", "workout_type": "strength", "duration_minutes": 45},
+            json={
+                "title": "Strength",
+                "workout_type": "strength",
+                "duration_minutes": 45,
+            },
         )
         assert response.json()["calories_burned"] > 0
 
@@ -407,8 +413,13 @@ class TestTracking:
                 "/api/v1/meals",
                 headers=auth_headers,
                 json={
-                    "name": "Meal", "meal_type": "lunch", "calories": calories,
-                    "protein_g": protein, "carbs_g": 40, "fat_g": 10, "fibre_g": 5,
+                    "name": "Meal",
+                    "meal_type": "lunch",
+                    "calories": calories,
+                    "protein_g": protein,
+                    "carbs_g": 40,
+                    "fat_g": 10,
+                    "fibre_g": 5,
                 },
             )
         summary = client.get("/api/v1/meals/summary", headers=auth_headers).json()
@@ -477,8 +488,12 @@ class TestPlanGeneration:
 
     def test_plan_generation_is_deterministic(self, client, auth_headers) -> None:
         request = {"days": 2, "target_calories": 1800}
-        first = client.post("/api/v1/plans/diet", headers=auth_headers, json=request).json()
-        second = client.post("/api/v1/plans/diet", headers=auth_headers, json=request).json()
+        first = client.post(
+            "/api/v1/plans/diet", headers=auth_headers, json=request
+        ).json()
+        second = client.post(
+            "/api/v1/plans/diet", headers=auth_headers, json=request
+        ).json()
         assert first == second
 
     def test_workout_plan_prioritises_strength(self, client, auth_headers) -> None:
@@ -499,9 +514,17 @@ class TestDashboard:
 
         body = client.get("/api/v1/analytics/dashboard", headers=auth_headers).json()
         for key in (
-            "metrics", "weight_trend", "sleep_trend", "calorie_trend",
-            "water_trend", "mood_trend", "workout_minutes_trend",
-            "macro_split", "habit_completion", "cycle_summary", "insights",
+            "metrics",
+            "weight_trend",
+            "sleep_trend",
+            "calorie_trend",
+            "water_trend",
+            "mood_trend",
+            "workout_minutes_trend",
+            "macro_split",
+            "habit_completion",
+            "cycle_summary",
+            "insights",
         ):
             assert key in body
         assert len(body["metrics"]) == 8
@@ -523,7 +546,10 @@ class TestDashboard:
         assert body["insights"][0]["category"] == "onboarding"
 
     def test_weekly_and_monthly_rollups(self, client, auth_headers) -> None:
-        assert client.get("/api/v1/analytics/weekly", headers=auth_headers).status_code == 200
+        assert (
+            client.get("/api/v1/analytics/weekly", headers=auth_headers).status_code
+            == 200
+        )
         monthly = client.get("/api/v1/analytics/monthly", headers=auth_headers).json()
         assert 0 <= monthly["consistency_score"] <= 100
 

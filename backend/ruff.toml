@@ -1,0 +1,52 @@
+# Ruff configuration — linter and formatter.
+
+line-length = 90
+target-version = "py311"
+extend-exclude = ["alembic/versions"]
+
+[lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # import sorting
+    "B",    # bugbear — real bug patterns, not style
+    "UP",   # pyupgrade
+    "C4",   # comprehension simplification
+    "SIM",  # simplification
+    "ASYNC",# async correctness (blocking calls in async defs)
+    "S",    # bandit security rules
+    "RUF",
+]
+ignore = [
+    "E501",   # line length is enforced by the formatter, not the linter
+    "B008",   # FastAPI's Depends()/File() in defaults is the framework idiom
+    "S101",   # assert is how pytest works
+    "RUF012", # ClassVar annotations on mutable class attrs — noisy here
+    # These flag "ambiguous" Unicode (en dashes, curly quotes, ×) as a
+    # homoglyph-attack signal. That is the right check for identifiers and the
+    # wrong one for English prose, and this codebase's docstrings are prose.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    # Binding 0.0.0.0 is required inside a container; the published port is
+    # what actually controls exposure.
+    "S104",
+]
+
+[lint.per-file-ignores]
+# Tests legitimately use hard-coded credentials and reach into private members.
+"tests/**" = ["S105", "S106", "SLF001", "S311", "ASYNC240"]
+# The dataset generator uses `random` for simulation, not for security.
+"ml/dataset.py" = ["S311"]
+"ml/train.py" = ["S311"]
+"app/services/plan_service.py" = ["S311"]
+# A subprocess call with a fixed argv and no shell, used to read the Tesseract
+# version for the health check.
+"app/ai/multimodal/ocr.py" = ["S603"]
+
+[lint.isort]
+known-first-party = ["app", "ml"]
+
+[format]
+quote-style = "double"
+indent-style = "space"

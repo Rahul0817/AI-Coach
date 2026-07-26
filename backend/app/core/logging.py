@@ -13,7 +13,7 @@ import json
 import logging
 import sys
 from contextvars import ContextVar
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from app.core.config import settings
@@ -24,10 +24,29 @@ request_id_ctx: ContextVar[str] = ContextVar("request_id", default="-")
 user_id_ctx: ContextVar[str] = ContextVar("user_id", default="-")
 
 _RESERVED = {
-    "args", "asctime", "created", "exc_info", "exc_text", "filename",
-    "funcName", "levelname", "levelno", "lineno", "module", "msecs",
-    "message", "msg", "name", "pathname", "process", "processName",
-    "relativeCreated", "stack_info", "thread", "threadName", "taskName",
+    "args",
+    "asctime",
+    "created",
+    "exc_info",
+    "exc_text",
+    "filename",
+    "funcName",
+    "levelname",
+    "levelno",
+    "lineno",
+    "module",
+    "msecs",
+    "message",
+    "msg",
+    "name",
+    "pathname",
+    "process",
+    "processName",
+    "relativeCreated",
+    "stack_info",
+    "thread",
+    "threadName",
+    "taskName",
 }
 
 
@@ -36,7 +55,7 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -58,14 +77,17 @@ class HumanFormatter(logging.Formatter):
     """Colourised single-line format — far easier to scan during development."""
 
     _COLOURS = {
-        "DEBUG": "\033[36m", "INFO": "\033[32m", "WARNING": "\033[33m",
-        "ERROR": "\033[31m", "CRITICAL": "\033[35m",
+        "DEBUG": "\033[36m",
+        "INFO": "\033[32m",
+        "WARNING": "\033[33m",
+        "ERROR": "\033[31m",
+        "CRITICAL": "\033[35m",
     }
     _RESET = "\033[0m"
 
     def format(self, record: logging.LogRecord) -> str:
         colour = self._COLOURS.get(record.levelname, "")
-        stamp = datetime.now(timezone.utc).strftime("%H:%M:%S")
+        stamp = datetime.now(UTC).strftime("%H:%M:%S")
         rid = request_id_ctx.get()
         prefix = f"{stamp} {colour}{record.levelname:<8}{self._RESET} {record.name}"
         if rid != "-":

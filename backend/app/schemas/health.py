@@ -26,7 +26,7 @@ class CycleCreate(BaseModel):
     notes: str | None = Field(None, max_length=1000)
 
     @model_validator(mode="after")
-    def _coherent_dates(self) -> "CycleCreate":
+    def _coherent_dates(self) -> CycleCreate:
         if self.start_date > date.today():
             raise ValueError("Cycle start date cannot be in the future.")
         if self.end_date:
@@ -34,8 +34,10 @@ class CycleCreate(BaseModel):
                 raise ValueError("End date cannot precede start date.")
             span = (self.end_date - self.start_date).days + 1
             if span > 21:
-                raise ValueError("A period longer than 21 days is not accepted here; "
-                                 "please seek medical advice.")
+                raise ValueError(
+                    "A period longer than 21 days is not accepted here; "
+                    "please seek medical advice."
+                )
             # Derive the period length when the client did not supply one.
             if self.period_length_days is None:
                 object.__setattr__(self, "period_length_days", span)
@@ -89,7 +91,7 @@ class SymptomCreate(BaseModel):
     notes: str | None = Field(None, max_length=500)
 
     @model_validator(mode="after")
-    def _not_future(self) -> "SymptomCreate":
+    def _not_future(self) -> SymptomCreate:
         if self.logged_on > date.today():
             raise ValueError("Cannot log a symptom for a future date.")
         return self
@@ -125,15 +127,25 @@ class RiskAssessmentRequest(BaseModel):
     age: int = Field(..., ge=10, le=100, examples=[24])
     bmi: float = Field(..., ge=12.0, le=60.0, examples=[27.4])
     cycle_length_days: int = Field(
-        ..., ge=10, le=180, examples=[42],
+        ...,
+        ge=10,
+        le=180,
+        examples=[42],
         description="Average days between the start of consecutive periods.",
     )
     cycle_irregularity: int = Field(
-        ..., ge=0, le=1, examples=[1],
+        ...,
+        ge=0,
+        le=1,
+        examples=[1],
         description="1 if periods are self-reported as irregular, else 0.",
     )
-    weight_gain: int = Field(..., ge=0, le=1, description="Recent unexplained weight gain.")
-    hair_growth: int = Field(..., ge=0, le=1, description="Excess facial/body hair (hirsutism).")
+    weight_gain: int = Field(
+        ..., ge=0, le=1, description="Recent unexplained weight gain."
+    )
+    hair_growth: int = Field(
+        ..., ge=0, le=1, description="Excess facial/body hair (hirsutism)."
+    )
     skin_darkening: int = Field(..., ge=0, le=1, description="Acanthosis nigricans.")
     hair_loss: int = Field(..., ge=0, le=1, description="Scalp hair thinning.")
     pimples: int = Field(..., ge=0, le=1, description="Persistent acne.")
@@ -141,17 +153,28 @@ class RiskAssessmentRequest(BaseModel):
     exercise_hours_per_week: float = Field(..., ge=0, le=40, examples=[2.5])
     sleep_hours: float = Field(..., ge=0, le=16, examples=[6.5])
     stress_level: int = Field(..., ge=1, le=5, examples=[4])
-    family_history: int = Field(..., ge=0, le=1, description="PCOS in a first-degree relative.")
+    family_history: int = Field(
+        ..., ge=0, le=1, description="PCOS in a first-degree relative."
+    )
     activity_level: ActivityLevel = ActivityLevel.MODERATE
 
     model_config = {
         "json_schema_extra": {
             "example": {
-                "age": 24, "bmi": 27.4, "cycle_length_days": 42,
-                "cycle_irregularity": 1, "weight_gain": 1, "hair_growth": 1,
-                "skin_darkening": 0, "hair_loss": 1, "pimples": 1,
-                "fast_food": 1, "exercise_hours_per_week": 2.5,
-                "sleep_hours": 6.5, "stress_level": 4, "family_history": 1,
+                "age": 24,
+                "bmi": 27.4,
+                "cycle_length_days": 42,
+                "cycle_irregularity": 1,
+                "weight_gain": 1,
+                "hair_growth": 1,
+                "skin_darkening": 0,
+                "hair_loss": 1,
+                "pimples": 1,
+                "fast_food": 1,
+                "exercise_hours_per_week": 2.5,
+                "sleep_hours": 6.5,
+                "stress_level": 4,
+                "family_history": 1,
                 "activity_level": "light",
             }
         }

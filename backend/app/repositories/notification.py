@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import func, or_, select, update
 
@@ -18,7 +18,7 @@ class NotificationRepository(BaseRepository[Notification]):
         self, user_id: uuid.UUID, *, limit: int = 50, unread_only: bool = False
     ) -> list[Notification]:
         """Notifications that are due now — immediate ones plus matured ones."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         stmt = select(Notification).where(
             Notification.user_id == user_id,
             or_(
@@ -32,7 +32,7 @@ class NotificationRepository(BaseRepository[Notification]):
         return list((await self.session.execute(stmt)).scalars().all())
 
     async def counts(self, user_id: uuid.UUID) -> tuple[int, int]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         base = (
             Notification.user_id == user_id,
             or_(
@@ -55,7 +55,7 @@ class NotificationRepository(BaseRepository[Notification]):
     ) -> Notification:
         notification = await self.get_for_user(notification_id, user_id)
         notification.is_read = True
-        notification.read_at = datetime.now(timezone.utc)
+        notification.read_at = datetime.now(UTC)
         await self.session.flush()
         return notification
 
@@ -67,7 +67,7 @@ class NotificationRepository(BaseRepository[Notification]):
                 Notification.user_id == user_id,
                 Notification.is_read.is_(False),
             )
-            .values(is_read=True, read_at=datetime.now(timezone.utc))
+            .values(is_read=True, read_at=datetime.now(UTC))
         )
         result = await self.session.execute(stmt)
         return int(result.rowcount or 0)

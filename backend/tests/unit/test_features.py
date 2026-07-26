@@ -67,10 +67,10 @@ class TestEngineering:
 
     def test_androgenic_count_sums_the_markers(self) -> None:
         payload = _random_payload(random.Random(2))
-        payload.update({m: 1 for m in ANDROGENIC_MARKERS})
+        payload.update(dict.fromkeys(ANDROGENIC_MARKERS, 1))
         assert engineer_features(payload)["androgenic_symptom_count"] == 4
 
-        payload.update({m: 0 for m in ANDROGENIC_MARKERS})
+        payload.update(dict.fromkeys(ANDROGENIC_MARKERS, 0))
         assert engineer_features(payload)["androgenic_symptom_count"] == 0
 
     def test_cycle_deviation_is_symmetric(self) -> None:
@@ -97,10 +97,18 @@ class TestEngineering:
     def test_lifestyle_score_bounded_and_directional(self) -> None:
         """Higher is better for this one, which the explainer relies on."""
         base = _random_payload(random.Random(5))
-        good = {**base, "sleep_hours": 8.0, "exercise_hours_per_week": 6.0,
-                "stress_level": 1}
-        poor = {**base, "sleep_hours": 4.0, "exercise_hours_per_week": 0.0,
-                "stress_level": 5}
+        good = {
+            **base,
+            "sleep_hours": 8.0,
+            "exercise_hours_per_week": 6.0,
+            "stress_level": 1,
+        }
+        poor = {
+            **base,
+            "sleep_hours": 4.0,
+            "exercise_hours_per_week": 0.0,
+            "stress_level": 5,
+        }
 
         assert engineer_features(good)["lifestyle_score"] == pytest.approx(1.0)
         assert engineer_features(poor)["lifestyle_score"] < 0.3

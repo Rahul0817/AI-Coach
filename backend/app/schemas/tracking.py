@@ -236,7 +236,8 @@ class WorkoutPlanRequest(BaseModel):
     minutes_per_session: int = Field(35, ge=10, le=120)
     intensity: Intensity = Intensity.MODERATE
     focus: str | None = Field(
-        None, max_length=200,
+        None,
+        max_length=200,
         examples=["insulin sensitivity and strength"],
     )
     equipment: list[str] = Field(default_factory=list)

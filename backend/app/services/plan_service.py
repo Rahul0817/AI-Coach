@@ -40,8 +40,7 @@ from app.schemas.tracking import (
 
 logger = get_logger(__name__)
 
-DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday",
-             "Saturday", "Sunday"]
+DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 #: Exercise pools by equipment availability. Compound movements first — they
 #: recruit the most muscle, which is what drives glucose disposal.
@@ -158,9 +157,7 @@ class PlanService:
                     "PCOS trials, and lower stress supports a more regular cycle."
                 )
             else:
-                exercises = rng.sample(MOBILITY_BLOCKS, 3) + [
-                    "20-minute easy walk"
-                ]
+                exercises = [*rng.sample(MOBILITY_BLOCKS, 3), "20-minute easy walk"]
                 title = "Active recovery"
                 rationale = (
                     "Recovery days are where adaptation happens. Gentle movement "
@@ -180,8 +177,10 @@ class PlanService:
                     title=title,
                     duration_minutes=payload.minutes_per_session,
                     intensity=(
-                        Intensity.HIGH if kind == WorkoutType.HIIT
-                        else Intensity.LOW if kind in {WorkoutType.YOGA, WorkoutType.MOBILITY}
+                        Intensity.HIGH
+                        if kind == WorkoutType.HIIT
+                        else Intensity.LOW
+                        if kind in {WorkoutType.YOGA, WorkoutType.MOBILITY}
                         else payload.intensity
                     ),
                     exercises=exercises,
@@ -210,15 +209,36 @@ class PlanService:
             1: [WorkoutType.STRENGTH],
             2: [WorkoutType.STRENGTH, WorkoutType.STRENGTH],
             3: [WorkoutType.STRENGTH, WorkoutType.CARDIO, WorkoutType.STRENGTH],
-            4: [WorkoutType.STRENGTH, WorkoutType.CARDIO, WorkoutType.STRENGTH,
-                WorkoutType.YOGA],
-            5: [WorkoutType.STRENGTH, WorkoutType.CARDIO, WorkoutType.STRENGTH,
-                WorkoutType.HIIT, WorkoutType.YOGA],
-            6: [WorkoutType.STRENGTH, WorkoutType.CARDIO, WorkoutType.STRENGTH,
-                WorkoutType.HIIT, WorkoutType.YOGA, WorkoutType.MOBILITY],
-            7: [WorkoutType.STRENGTH, WorkoutType.CARDIO, WorkoutType.STRENGTH,
-                WorkoutType.HIIT, WorkoutType.YOGA, WorkoutType.CARDIO,
-                WorkoutType.MOBILITY],
+            4: [
+                WorkoutType.STRENGTH,
+                WorkoutType.CARDIO,
+                WorkoutType.STRENGTH,
+                WorkoutType.YOGA,
+            ],
+            5: [
+                WorkoutType.STRENGTH,
+                WorkoutType.CARDIO,
+                WorkoutType.STRENGTH,
+                WorkoutType.HIIT,
+                WorkoutType.YOGA,
+            ],
+            6: [
+                WorkoutType.STRENGTH,
+                WorkoutType.CARDIO,
+                WorkoutType.STRENGTH,
+                WorkoutType.HIIT,
+                WorkoutType.YOGA,
+                WorkoutType.MOBILITY,
+            ],
+            7: [
+                WorkoutType.STRENGTH,
+                WorkoutType.CARDIO,
+                WorkoutType.STRENGTH,
+                WorkoutType.HIIT,
+                WorkoutType.YOGA,
+                WorkoutType.CARDIO,
+                WorkoutType.MOBILITY,
+            ],
         }
         return templates.get(days, templates[4])
 
@@ -230,8 +250,8 @@ class PlanService:
             + (
                 ", which meets the 150-minute guideline."
                 if total >= 150
-                else f". Building toward 150 minutes is the target — add "
-                     f"10 minutes per session every fortnight."
+                else ". Building toward 150 minutes is the target — add "
+                "10 minutes per session every fortnight."
             ),
         ]
         if activity == "sedentary":
@@ -261,7 +281,8 @@ class PlanService:
 
         preference = payload.dietary_preference or (
             DietaryPreference(profile.dietary_preference)
-            if profile else DietaryPreference.OMNIVORE
+            if profile
+            else DietaryPreference.OMNIVORE
         )
         allergies = {a.lower() for a in (payload.allergies or [])}
         if profile and profile.allergies:
@@ -291,8 +312,7 @@ class PlanService:
 
         return DietPlanResponse(
             plan_name=(
-                f"{payload.days}-day PCOS meal plan "
-                f"(~{target} kcal, {preference.value})"
+                f"{payload.days}-day PCOS meal plan (~{target} kcal, {preference.value})"
             ),
             days=days,
             principles=[
@@ -329,7 +349,12 @@ class PlanService:
         """
         animal_flesh = {"chicken_breast", "chicken_curry", "fish", "salmon"}
         all_animal = animal_flesh | {
-            "egg", "paneer", "greek_yogurt", "curd", "milk", "whey_protein"
+            "egg",
+            "paneer",
+            "greek_yogurt",
+            "curd",
+            "milk",
+            "whey_protein",
         }
 
         excluded: set[str] = set()
@@ -349,8 +374,12 @@ class PlanService:
             return any(allergen and allergen in haystack for allergen in allergies)
 
         buckets: dict[str, list[FoodItem]] = {
-            "protein": [], "grain": [], "legume": [], "vegetable": [],
-            "fruit": [], "fat": [],
+            "protein": [],
+            "grain": [],
+            "legume": [],
+            "vegetable": [],
+            "fruit": [],
+            "fat": [],
         }
         for item in FOODS.values():
             if item.category in buckets and not blocked(item) and item.pcos_score >= 45:
@@ -407,9 +436,7 @@ class PlanService:
                 totals["fib"] += item.fibre_g * factor
                 gi_weighted += item.glycemic_index * (item.carbs_g * factor)
 
-            average_gi = (
-                round(gi_weighted / totals["c"]) if totals["c"] > 0 else 0
-            )
+            average_gi = round(gi_weighted / totals["c"]) if totals["c"] > 0 else 0
             names = " + ".join(item.name for item in components)
 
             meals.append(
@@ -436,6 +463,7 @@ class PlanService:
         day_index: int,
     ) -> list[FoodItem]:
         """Choose foods for one meal slot, always including a protein source."""
+
         def take(category: str, offset: int) -> FoodItem | None:
             items = pool.get(category) or []
             if not items:

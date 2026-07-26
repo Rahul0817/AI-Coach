@@ -15,7 +15,6 @@ import threading
 from pathlib import Path
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 from app.core.config import settings
@@ -40,7 +39,7 @@ MAX_RISK_SCORE = 0.97
 class RiskPredictor:
     """Thread-safe singleton wrapper around the trained sklearn pipeline."""
 
-    _instance: "RiskPredictor | None" = None
+    _instance: RiskPredictor | None = None
     _lock = threading.Lock()
 
     def __init__(self) -> None:
@@ -50,7 +49,7 @@ class RiskPredictor:
 
     # ------------------------------------------------------------ lifecycle
     @classmethod
-    def instance(cls) -> "RiskPredictor":
+    def instance(cls) -> RiskPredictor:
         if cls._instance is None:
             with cls._lock:
                 if cls._instance is None:
@@ -134,8 +133,9 @@ class RiskPredictor:
         selects by name but the downstream estimator is positional.
         """
         features = engineer_features(payload)
-        return pd.DataFrame([[features[name] for name in FEATURE_ORDER]],
-                            columns=FEATURE_ORDER)
+        return pd.DataFrame(
+            [[features[name] for name in FEATURE_ORDER]], columns=FEATURE_ORDER
+        )
 
     def predict(self, payload: dict) -> dict[str, Any]:
         """Return the calibrated probability plus provenance metadata."""

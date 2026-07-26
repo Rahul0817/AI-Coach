@@ -9,9 +9,9 @@ from sqlalchemy import Boolean, DateTime, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.types import JSONDict
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import NotificationType
+from app.models.types import JSONDict
 
 if TYPE_CHECKING:  # pragma: no cover
     from app.models.user import User
@@ -51,4 +51,4 @@ class Notification(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
         JSONDict, default=dict, nullable=False, server_default="{}"
     )
 
-    user: Mapped["User"] = relationship(back_populates="notifications")
+    user: Mapped[User] = relationship(back_populates="notifications")

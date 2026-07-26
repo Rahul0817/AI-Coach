@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -27,18 +27,14 @@ class UserRepository(BaseRepository[User]):
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def get_with_profile(self, user_id: uuid.UUID) -> User | None:
-        stmt = (
-            select(User)
-            .where(User.id == user_id)
-            .options(selectinload(User.profile))
-        )
+        stmt = select(User).where(User.id == user_id).options(selectinload(User.profile))
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
     async def email_taken(self, email: str) -> bool:
         return await self.exists(email=email.lower().strip())
 
     async def record_successful_login(self, user: User) -> User:
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = datetime.now(UTC)
         user.failed_login_count = 0
         user.locked_until = None
         await self.session.flush()
@@ -48,7 +44,7 @@ class UserRepository(BaseRepository[User]):
         """Increment the failure counter and lock the account at the threshold."""
         user.failed_login_count += 1
         if user.failed_login_count >= MAX_FAILED_LOGINS:
-            user.locked_until = datetime.now(timezone.utc) + LOCKOUT_DURATION
+            user.locked_until = datetime.now(UTC) + LOCKOUT_DURATION
         await self.session.flush()
         return user
 
@@ -56,7 +52,7 @@ class UserRepository(BaseRepository[User]):
     def is_locked(user: User) -> bool:
         if user.locked_until is None:
             return False
-        return user.locked_until > datetime.now(timezone.utc)
+        return user.locked_until > datetime.now(UTC)
 
 
 class ProfileRepository(BaseRepository[Profile]):
@@ -73,9 +69,7 @@ class ProfileRepository(BaseRepository[Profile]):
             profile = await self.create(user_id=user_id)
         return profile
 
-    async def merge_ai_memory(
-        self, profile: Profile, updates: dict
-    ) -> Profile:
+    async def merge_ai_memory(self, profile: Profile, updates: dict) -> Profile:
         """Merge newly-learned facts into long-term memory.
 
         A fresh dict is assigned rather than mutated in place: SQLAlchemy's

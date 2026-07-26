@@ -31,8 +31,14 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 SUPPORTED_AUDIO_TYPES = {
-    "audio/webm", "audio/ogg", "audio/wav", "audio/x-wav",
-    "audio/mpeg", "audio/mp4", "audio/m4a", "audio/flac",
+    "audio/webm",
+    "audio/ogg",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/mpeg",
+    "audio/mp4",
+    "audio/m4a",
+    "audio/flac",
 }
 MAX_AUDIO_BYTES = 25 * 1024 * 1024  # matches the Whisper API limit
 
@@ -80,8 +86,7 @@ def capabilities() -> dict:
             "there is no per-minute cost. Server transcription is offered as a "
             "fallback for browsers without Web Speech support."
             if not server_stt_available()
-            else
-            "Both browser-native and server-side speech are available. The "
+            else "Both browser-native and server-side speech are available. The "
             "browser path keeps audio on-device; the server path uses Whisper "
             "for higher accuracy on accented or noisy speech."
         ),
@@ -185,10 +190,10 @@ def strip_markdown(text: str) -> str:
     out = re.sub(r"\*\*([^*]+)\*\*", r"\1", out)
     out = re.sub(r"\*([^*]+)\*", r"\1", out)
     out = re.sub(r"__([^_]+)__", r"\1", out)
-    out = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", out)   # links → link text
+    out = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", out)  # links → link text
     out = re.sub(r"^\s{0,3}[-*+]\s+", "", out, flags=re.MULTILINE)
     out = re.sub(r"^\s{0,3}>\s?", "", out, flags=re.MULTILINE)
     out = re.sub(r"^\s{0,3}[-*_]{3,}\s*$", "", out, flags=re.MULTILINE)
-    out = re.sub(r"\|", " ", out)                         # table pipes
+    out = re.sub(r"\|", " ", out)  # table pipes
     out = re.sub(r"\n{3,}", "\n\n", out)
     return out.strip()

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Response, status
 
@@ -20,9 +20,7 @@ router = APIRouter(prefix="/users", tags=["Profile & Settings"])
     summary="Get health profile",
     responses={401: {"model": ErrorResponse}},
 )
-async def get_profile(
-    user_id: CurrentUserId, service: UserServiceDep
-) -> ProfileResponse:
+async def get_profile(user_id: CurrentUserId, service: UserServiceDep) -> ProfileResponse:
     """Return the health profile, creating an empty one if none exists."""
     profile = await service.get_profile(user_id)
     return ProfileResponse(**service.serialise_profile(profile))
@@ -70,9 +68,7 @@ async def update_account(
         }
     },
 )
-async def export_data(
-    user: CurrentUser, service: UserServiceDep
-) -> Response:
+async def export_data(user: CurrentUser, service: UserServiceDep) -> Response:
     """Download a complete copy of the account's data.
 
     Served as a file attachment rather than a JSON body so the browser saves it
@@ -80,7 +76,7 @@ async def export_data(
     every table rather than a curated subset.
     """
     payload = await service.export_data(user.id)
-    stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
+    stamp = datetime.now(UTC).strftime("%Y%m%d")
     filename = f"oviora-export-{stamp}.json"
 
     return Response(
@@ -105,13 +101,13 @@ async def clear_ai_memory(
     deliberately. This clears only what was inferred, which is the part they
     may not have realised was being stored.
     """
-    from app.ai.memory.manager import ConversationMemory
     from app.ai.llm.factory import get_llm_provider
+    from app.ai.memory.manager import ConversationMemory
 
     memory = ConversationMemory(service.session, get_llm_provider())
     await memory.clear_long_term(user_id)
     await service.session.commit()
     return MessageResponse(
         message="Cleared. The assistant no longer remembers facts inferred from "
-                "your conversations."
+        "your conversations."
     )

@@ -145,14 +145,26 @@ class TestAggregationQueries:
 
         for calories, protein in [(300, 20), (500, 30), (200, 10)]:
             await meals.create(
-                user_id=user.id, logged_on=today, meal_type="lunch",
-                name="Meal", calories=calories, protein_g=protein,
-                carbs_g=40, fat_g=10, fibre_g=5,
+                user_id=user.id,
+                logged_on=today,
+                meal_type="lunch",
+                name="Meal",
+                calories=calories,
+                protein_g=protein,
+                carbs_g=40,
+                fat_g=10,
+                fibre_g=5,
             )
         await meals.create(
-            user_id=user.id, logged_on=today - timedelta(days=1),
-            meal_type="dinner", name="Yesterday", calories=999, protein_g=1,
-            carbs_g=1, fat_g=1, fibre_g=1,
+            user_id=user.id,
+            logged_on=today - timedelta(days=1),
+            meal_type="dinner",
+            name="Yesterday",
+            calories=999,
+            protein_g=1,
+            carbs_g=1,
+            fat_g=1,
+            fibre_g=1,
         )
         await session.commit()
 
@@ -169,8 +181,10 @@ class TestAggregationQueries:
 
         for offset, severity in enumerate([2, 4, 3]):
             await symptoms.create(
-                user_id=user.id, logged_on=start + timedelta(days=offset),
-                symptom="fatigue", severity=severity,
+                user_id=user.id,
+                logged_on=start + timedelta(days=offset),
+                symptom="fatigue",
+                severity=severity,
             )
         await session.commit()
 
@@ -196,8 +210,10 @@ class TestConversationRepository:
             sequence = await messages.next_sequence(conversation.id)
             created.append(
                 await messages.create(
-                    conversation_id=conversation.id, sequence=sequence,
-                    role="user", content=f"message {index}",
+                    conversation_id=conversation.id,
+                    sequence=sequence,
+                    role="user",
+                    content=f"message {index}",
                 )
             )
         await session.commit()
@@ -217,8 +233,10 @@ class TestConversationRepository:
 
         for index in range(6):
             await messages.create(
-                conversation_id=conversation.id, sequence=index + 1,
-                role="user", content=f"m{index}",
+                conversation_id=conversation.id,
+                sequence=index + 1,
+                role="user",
+                content=f"m{index}",
             )
         await session.commit()
 

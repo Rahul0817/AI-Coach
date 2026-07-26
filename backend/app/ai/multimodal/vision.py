@@ -148,9 +148,7 @@ class OpenAIVisionProvider(VisionProvider):
             },
         ]
         if caption:
-            user_content.append(
-                {"type": "text", "text": f"The user adds: {caption}"}
-            )
+            user_content.append({"type": "text", "text": f"The user adds: {caption}"})
 
         try:
             response = await client.chat.completions.create(
@@ -198,8 +196,18 @@ class OpenAIVisionProvider(VisionProvider):
 
 
 _PORTION_WORDS = {
-    "half": 0.5, "quarter": 0.25, "one": 1, "two": 2, "three": 3, "four": 4,
-    "a": 1, "an": 1, "single": 1, "double": 2, "couple": 2, "few": 3,
+    "half": 0.5,
+    "quarter": 0.25,
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "a": 1,
+    "an": 1,
+    "single": 1,
+    "double": 2,
+    "couple": 2,
+    "few": 3,
 }
 _GRAM_RE = re.compile(r"(\d+(?:\.\d+)?)\s*(g|gram|grams|gm|ml)\b", re.I)
 
@@ -256,9 +264,7 @@ def get_vision_provider() -> VisionProvider:
     return DescriptionVisionProvider()
 
 
-def build_analysis_payload(
-    analysis: VisionAnalysis, image_url: str | None
-) -> dict:
+def build_analysis_payload(analysis: VisionAnalysis, image_url: str | None) -> dict:
     """Turn a :class:`VisionAnalysis` into the API response body.
 
     All nutrition maths, scoring and swap logic lives here rather than in the

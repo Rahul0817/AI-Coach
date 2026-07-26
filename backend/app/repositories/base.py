@@ -63,14 +63,10 @@ class BaseRepository(Generic[ModelT]):
     async def get_or_404(self, entity_id: uuid.UUID) -> ModelT:
         instance = await self.get(entity_id)
         if instance is None:
-            raise NotFoundError(
-                f"{self.model.__name__} {entity_id} was not found."
-            )
+            raise NotFoundError(f"{self.model.__name__} {entity_id} was not found.")
         return instance
 
-    async def get_for_user(
-        self, entity_id: uuid.UUID, user_id: uuid.UUID
-    ) -> ModelT:
+    async def get_for_user(self, entity_id: uuid.UUID, user_id: uuid.UUID) -> ModelT:
         """Fetch a row *and* assert ownership in one query.
 
         Doing the ownership check in SQL rather than after loading closes the
@@ -83,14 +79,10 @@ class BaseRepository(Generic[ModelT]):
         result = await self.session.execute(stmt)
         instance = result.scalar_one_or_none()
         if instance is None:
-            raise NotFoundError(
-                f"{self.model.__name__} {entity_id} was not found."
-            )
+            raise NotFoundError(f"{self.model.__name__} {entity_id} was not found.")
         return instance
 
-    async def list_all(
-        self, *, limit: int = 100, offset: int = 0
-    ) -> list[ModelT]:
+    async def list_all(self, *, limit: int = 100, offset: int = 0) -> list[ModelT]:
         stmt = select(self.model).limit(limit).offset(offset)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
@@ -111,8 +103,12 @@ class BaseRepository(Generic[ModelT]):
         return list(result.scalars().all())
 
     async def count_for_user(self, user_id: uuid.UUID) -> int:
-        stmt = select(func.count()).select_from(self.model).where(
-            self.model.user_id == user_id  # type: ignore[attr-defined]
+        stmt = (
+            select(func.count())
+            .select_from(self.model)
+            .where(
+                self.model.user_id == user_id  # type: ignore[attr-defined]
+            )
         )
         return int((await self.session.execute(stmt)).scalar_one())
 
@@ -184,9 +180,7 @@ class BaseRepository(Generic[ModelT]):
         return int(result.rowcount or 0)
 
     # -------------------------------------------------------------- helpers
-    def _apply_default_order(
-        self, stmt: Select[Any], desc: bool
-    ) -> Select[Any]:
+    def _apply_default_order(self, stmt: Select[Any], desc: bool) -> Select[Any]:
         """Order by the most natural date column the model exposes."""
         for candidate in ("logged_on", "start_date", "created_at"):
             column = getattr(self.model, candidate, None)

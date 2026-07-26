@@ -26,9 +26,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.types import GUID, JSONDict
 from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
 from app.models.enums import ActivityLevel, DiagnosisStatus, DietaryPreference
+from app.models.types import GUID, JSONDict
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from app.models.chat import Conversation
@@ -36,7 +36,13 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     from app.models.notification import Notification
     from app.models.report import BloodReport
     from app.models.tracking import (
-        Habit, MealLog, MoodLog, SleepLog, WaterLog, WeightLog, WorkoutLog,
+        Habit,
+        MealLog,
+        MoodLog,
+        SleepLog,
+        WaterLog,
+        WeightLog,
+        WorkoutLog,
     )
 
 
@@ -59,56 +65,54 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         DateTime(timezone=True), nullable=True
     )
     # Consecutive failed logins; reset on success. Used for lockout backoff.
-    failed_login_count: Mapped[int] = mapped_column(
-        Integer, default=0, nullable=False
-    )
+    failed_login_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     locked_until: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
 
-    profile: Mapped["Profile | None"] = relationship(
+    profile: Mapped[Profile | None] = relationship(
         back_populates="user",
         uselist=False,
         cascade="all, delete-orphan",
         lazy="selectin",
     )
-    conversations: Mapped[list["Conversation"]] = relationship(
+    conversations: Mapped[list[Conversation]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    cycles: Mapped[list["CycleLog"]] = relationship(
+    cycles: Mapped[list[CycleLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    symptoms: Mapped[list["SymptomLog"]] = relationship(
+    symptoms: Mapped[list[SymptomLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    predictions: Mapped[list["Prediction"]] = relationship(
+    predictions: Mapped[list[Prediction]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    habits: Mapped[list["Habit"]] = relationship(
+    habits: Mapped[list[Habit]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    meals: Mapped[list["MealLog"]] = relationship(
+    meals: Mapped[list[MealLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    workouts: Mapped[list["WorkoutLog"]] = relationship(
+    workouts: Mapped[list[WorkoutLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    water_logs: Mapped[list["WaterLog"]] = relationship(
+    water_logs: Mapped[list[WaterLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    sleep_logs: Mapped[list["SleepLog"]] = relationship(
+    sleep_logs: Mapped[list[SleepLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    weight_logs: Mapped[list["WeightLog"]] = relationship(
+    weight_logs: Mapped[list[WeightLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    mood_logs: Mapped[list["MoodLog"]] = relationship(
+    mood_logs: Mapped[list[MoodLog]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    reports: Mapped[list["BloodReport"]] = relationship(
+    reports: Mapped[list[BloodReport]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
-    notifications: Mapped[list["Notification"]] = relationship(
+    notifications: Mapped[list[Notification]] = relationship(
         back_populates="user", cascade="all, delete-orphan", lazy="noload"
     )
 
@@ -121,10 +125,12 @@ class Profile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     __tablename__ = "profiles"
     __table_args__ = (
-        CheckConstraint("height_cm IS NULL OR height_cm BETWEEN 90 AND 250",
-                        name="height_range"),
-        CheckConstraint("weight_kg IS NULL OR weight_kg BETWEEN 25 AND 350",
-                        name="weight_range"),
+        CheckConstraint(
+            "height_cm IS NULL OR height_cm BETWEEN 90 AND 250", name="height_range"
+        ),
+        CheckConstraint(
+            "weight_kg IS NULL OR weight_kg BETWEEN 25 AND 350", name="weight_range"
+        ),
         CheckConstraint(
             "average_cycle_length IS NULL OR average_cycle_length BETWEEN 15 AND 120",
             name="cycle_length_range",
@@ -169,16 +175,14 @@ class Profile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    timezone: Mapped[str] = mapped_column(
-        String(64), default="UTC", nullable=False
-    )
+    timezone: Mapped[str] = mapped_column(String(64), default="UTC", nullable=False)
     # Long-lived facts the memory layer extracted from conversation, e.g.
     # {"age": 22, "prefers": "vegetarian breakfasts"}.
     ai_memory: Mapped[dict] = mapped_column(
         JSONDict, default=dict, nullable=False, server_default="{}"
     )
 
-    user: Mapped["User"] = relationship(back_populates="profile")
+    user: Mapped[User] = relationship(back_populates="profile")
 
     # ------------------------------------------------------------- computed
     @property
@@ -190,7 +194,10 @@ class Profile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
         return (
             today.year
             - self.date_of_birth.year
-            - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            - (
+                (today.month, today.day)
+                < (self.date_of_birth.month, self.date_of_birth.day)
+            )
         )
 
     @property

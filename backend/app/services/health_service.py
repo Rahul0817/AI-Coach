@@ -123,7 +123,8 @@ class CycleService:
         # a sample drawn from a larger set.
         std_dev = round(statistics.pstdev(lengths), 1) if len(lengths) >= 2 else None
         irregular = sum(
-            1 for length in lengths
+            1
+            for length in lengths
             if not NORMAL_CYCLE_RANGE[0] <= length <= NORMAL_CYCLE_RANGE[1]
         )
 
@@ -212,9 +213,7 @@ class SymptomService:
         await self.symptoms.delete_for_user(symptom_id, user_id)
         await self.session.commit()
 
-    async def summary(
-        self, user_id: uuid.UUID, days: int = 90
-    ) -> list[SymptomSummary]:
+    async def summary(self, user_id: uuid.UUID, days: int = 90) -> list[SymptomSummary]:
         """Per-symptom frequency, severity and direction of travel."""
         end = date.today()
         start = end - timedelta(days=days)

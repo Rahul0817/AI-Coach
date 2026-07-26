@@ -86,32 +86,47 @@ class AnalyticsService:
         workout_days = await self.workouts.weekly_minutes(user_id, start, today)
 
         weight_series = self._series(
-            "weight", "kg",
+            "weight",
+            "kg",
             {row.logged_on: row.weight_kg for row in weight_rows},
-            start, today, lower_is_better=True,
+            start,
+            today,
+            lower_is_better=True,
         )
         sleep_series = self._series(
-            "sleep", "hours",
-            {row.logged_on: row.hours for row in sleep_rows}, start, today,
+            "sleep",
+            "hours",
+            {row.logged_on: row.hours for row in sleep_rows},
+            start,
+            today,
         )
         water_series = self._series(
-            "water", "ml",
+            "water",
+            "ml",
             {row.logged_on: float(row.millilitres) for row in water_rows},
-            start, today,
+            start,
+            today,
         )
         mood_series = self._series(
-            "mood", "score",
+            "mood",
+            "score",
             {row.logged_on: float(row.mood_score) for row in mood_rows},
-            start, today,
+            start,
+            today,
         )
         calorie_series = self._series(
-            "calories", "kcal",
-            {row["date"]: row["calories"] for row in meal_totals}, start, today,
+            "calories",
+            "kcal",
+            {row["date"]: row["calories"] for row in meal_totals},
+            start,
+            today,
         )
         workout_series = self._series(
-            "workout_minutes", "minutes",
+            "workout_minutes",
+            "minutes",
             {row["date"]: float(row["minutes"]) for row in workout_days},
-            start, today,
+            start,
+            today,
         )
 
         habit_service = HabitService(self.session)
@@ -123,8 +138,14 @@ class AnalyticsService:
 
         macro_split = self._macro_split(meal_totals)
         metrics = self._metric_cards(
-            profile, weight_series, sleep_series, water_rows,
-            nutrition_today, workout_series, habit_stats, today,
+            profile,
+            weight_series,
+            sleep_series,
+            water_rows,
+            nutrition_today,
+            workout_series,
+            habit_stats,
+            today,
         )
 
         insights = self._generate_insights(
@@ -168,7 +189,8 @@ class AnalyticsService:
                 "days_until_next": cycle_insights.days_until_next,
                 "predicted_next_start": (
                     cycle_insights.predicted_next_start.isoformat()
-                    if cycle_insights.predicted_next_start else None
+                    if cycle_insights.predicted_next_start
+                    else None
                 ),
                 "total_cycles": cycle_insights.total_cycles,
                 "variability": cycle_insights.cycle_length_std_dev,
@@ -181,7 +203,8 @@ class AnalyticsService:
                     "confidence": latest_prediction.confidence,
                     "assessed_at": latest_prediction.created_at.isoformat(),
                 }
-                if latest_prediction else None
+                if latest_prediction
+                else None
             ),
             insights=insights,
             streaks={h["name"]: h["current_streak"] for h in habit_stats},
@@ -207,9 +230,7 @@ class AnalyticsService:
         points: list[TrendPoint] = []
         cursor = start
         while cursor <= end:
-            points.append(
-                TrendPoint(label=cursor.isoformat(), value=values.get(cursor))
-            )
+            points.append(TrendPoint(label=cursor.isoformat(), value=values.get(cursor)))
             cursor += timedelta(days=1)
 
         observed = [v for v in values.values() if v is not None]
@@ -232,12 +253,18 @@ class AnalyticsService:
                 rising = last > first
                 # "up" means *improving*, which for weight means falling.
                 direction = (
-                    "down" if rising == lower_is_better else "up"
-                ) if lower_is_better else ("up" if rising else "down")
+                    ("down" if rising == lower_is_better else "up")
+                    if lower_is_better
+                    else ("up" if rising else "down")
+                )
 
         return TimeSeries(
-            metric=metric, unit=unit, points=points,
-            average=average, change_percentage=change, direction=direction,
+            metric=metric,
+            unit=unit,
+            points=points,
+            average=average,
+            change_percentage=change,
+            direction=direction,
         )
 
     @staticmethod
@@ -257,91 +284,119 @@ class AnalyticsService:
         }
 
     def _metric_cards(
-        self, profile, weight_series, sleep_series, water_rows,
-        nutrition_today, workout_series, habit_stats, today,
+        self,
+        profile,
+        weight_series,
+        sleep_series,
+        water_rows,
+        nutrition_today,
+        workout_series,
+        habit_stats,
+        today,
     ) -> list[MetricCard]:  # type: ignore[no-untyped-def]
         latest_weight = next(
             (p.value for p in reversed(weight_series.points) if p.value is not None),
             profile.weight_kg if profile else None,
         )
-        today_water = next(
-            (row for row in water_rows if row.logged_on == today), None
-        )
-        workout_minutes_week = sum(
-            p.value or 0 for p in workout_series.points[-7:]
-        )
+        today_water = next((row for row in water_rows if row.logged_on == today), None)
+        workout_minutes_week = sum(p.value or 0 for p in workout_series.points[-7:])
         habits_done = sum(1 for h in habit_stats if h["completed_today"])
 
         return [
             MetricCard(
-                key="weight", label="Weight", value=latest_weight, unit="kg",
+                key="weight",
+                label="Weight",
+                value=latest_weight,
+                unit="kg",
                 change_percentage=weight_series.change_percentage,
-                direction=weight_series.direction, icon="scale",
+                direction=weight_series.direction,
+                icon="scale",
             ),
             MetricCard(
-                key="bmi", label="BMI",
-                value=profile.bmi if profile else None, unit="",
+                key="bmi",
+                label="BMI",
+                value=profile.bmi if profile else None,
+                unit="",
                 secondary_label="Category",
                 secondary_value=profile.bmi_category if profile else None,
                 icon="activity",
             ),
             MetricCard(
-                key="sleep", label="Sleep (avg)",
-                value=sleep_series.average, unit="hours", goal=8.0,
+                key="sleep",
+                label="Sleep (avg)",
+                value=sleep_series.average,
+                unit="hours",
+                goal=8.0,
                 progress_percentage=(
                     round(min(100, sleep_series.average / 8 * 100), 1)
-                    if sleep_series.average else None
+                    if sleep_series.average
+                    else None
                 ),
-                direction=sleep_series.direction, icon="moon",
+                direction=sleep_series.direction,
+                icon="moon",
             ),
             MetricCard(
-                key="calories", label="Calories today",
-                value=nutrition_today.total_calories, unit="kcal",
+                key="calories",
+                label="Calories today",
+                value=nutrition_today.total_calories,
+                unit="kcal",
                 goal=nutrition_today.calorie_goal,
                 progress_percentage=(
                     round(
                         nutrition_today.total_calories
-                        / nutrition_today.calorie_goal * 100, 1
-                    ) if nutrition_today.calorie_goal else None
+                        / nutrition_today.calorie_goal
+                        * 100,
+                        1,
+                    )
+                    if nutrition_today.calorie_goal
+                    else None
                 ),
                 icon="flame",
             ),
             MetricCard(
-                key="protein", label="Protein today",
-                value=nutrition_today.total_protein_g, unit="g",
+                key="protein",
+                label="Protein today",
+                value=nutrition_today.total_protein_g,
+                unit="g",
                 goal=nutrition_today.protein_goal_g,
                 progress_percentage=(
                     round(
                         nutrition_today.total_protein_g
-                        / nutrition_today.protein_goal_g * 100, 1
-                    ) if nutrition_today.protein_goal_g else None
+                        / nutrition_today.protein_goal_g
+                        * 100,
+                        1,
+                    )
+                    if nutrition_today.protein_goal_g
+                    else None
                 ),
                 icon="drumstick",
             ),
             MetricCard(
-                key="water", label="Water today",
+                key="water",
+                label="Water today",
                 value=float(today_water.millilitres) if today_water else 0.0,
                 unit="ml",
                 goal=float(today_water.goal_millilitres) if today_water else 2500.0,
-                progress_percentage=(
-                    today_water.goal_percentage if today_water else 0.0
-                ),
+                progress_percentage=(today_water.goal_percentage if today_water else 0.0),
                 icon="droplet",
             ),
             MetricCard(
-                key="workouts", label="Active minutes (7d)",
-                value=float(workout_minutes_week), unit="minutes", goal=150.0,
-                progress_percentage=round(
-                    min(100, workout_minutes_week / 150 * 100), 1
-                ),
-                direction=workout_series.direction, icon="dumbbell",
+                key="workouts",
+                label="Active minutes (7d)",
+                value=float(workout_minutes_week),
+                unit="minutes",
+                goal=150.0,
+                progress_percentage=round(min(100, workout_minutes_week / 150 * 100), 1),
+                direction=workout_series.direction,
+                icon="dumbbell",
             ),
             MetricCard(
-                key="habits", label="Habits today",
-                value=float(habits_done), unit=f"of {len(habit_stats)}",
+                key="habits",
+                label="Habits today",
+                value=float(habits_done),
+                unit=f"of {len(habit_stats)}",
                 progress_percentage=(
-                    round(habits_done / len(habit_stats) * 100, 1)
-                    if habit_stats else 0.0
+                    round(habits_done / len(habit_stats) * 100, 1) if habit_stats else 0.0
                 ),
                 icon="target",
             ),
@@ -349,9 +404,18 @@ class AnalyticsService:
 
     # ------------------------------------------------------------ insights
     def _generate_insights(
-        self, *, weight_series, sleep_series, water_rows, mood_rows,
-        meal_totals, workout_days, habit_stats, cycle_insights,
-        nutrition_today, days,
+        self,
+        *,
+        weight_series,
+        sleep_series,
+        water_rows,
+        mood_rows,
+        meal_totals,
+        workout_days,
+        habit_stats,
+        cycle_insights,
+        nutrition_today,
+        days,
     ) -> list[AIInsight]:  # type: ignore[no-untyped-def]
         """Rules over the user's own data, ordered so praise leads."""
         insights: list[AIInsight] = []
@@ -360,153 +424,192 @@ class AnalyticsService:
         if meal_totals:
             avg_protein = statistics.mean(r["protein_g"] for r in meal_totals)
             if avg_protein < nutrition_today.protein_goal_g * 0.7:
-                insights.append(AIInsight(
-                    title="Protein is running low",
-                    body=(
-                        f"You are averaging {avg_protein:.0f}g of protein a day "
-                        f"against a target of {nutrition_today.protein_goal_g:.0f}g. "
-                        f"Protein steadies blood sugar and keeps you full — adding "
-                        f"eggs, curd, dal or paneer to breakfast is usually the "
-                        f"easiest place to close the gap."
-                    ),
-                    category="nutrition", severity="attention",
-                    action_label="Plan a meal", action_url="/dashboard/meals",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Protein is running low",
+                        body=(
+                            f"You are averaging {avg_protein:.0f}g of protein a day "
+                            f"against a target of {nutrition_today.protein_goal_g:.0f}g. "
+                            f"Protein steadies blood sugar and keeps you full — adding "
+                            f"eggs, curd, dal or paneer to breakfast is usually the "
+                            f"easiest place to close the gap."
+                        ),
+                        category="nutrition",
+                        severity="attention",
+                        action_label="Plan a meal",
+                        action_url="/dashboard/meals",
+                    )
+                )
 
         # --- sleep ---
         if sleep_series.average is not None:
             if sleep_series.average < 6.5:
-                insights.append(AIInsight(
-                    title="Short sleep is working against you",
-                    body=(
-                        f"Your average over the last {days} days is "
-                        f"{sleep_series.average:.1f} hours. Sleep restriction "
-                        f"measurably reduces insulin sensitivity, which is the "
-                        f"exact mechanism most PCOS management targets. A "
-                        f"consistent wake time is the highest-leverage change."
-                    ),
-                    category="sleep", severity="attention",
-                    action_label="Log sleep", action_url="/dashboard/sleep",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Short sleep is working against you",
+                        body=(
+                            f"Your average over the last {days} days is "
+                            f"{sleep_series.average:.1f} hours. Sleep restriction "
+                            f"measurably reduces insulin sensitivity, which is the "
+                            f"exact mechanism most PCOS management targets. A "
+                            f"consistent wake time is the highest-leverage change."
+                        ),
+                        category="sleep",
+                        severity="attention",
+                        action_label="Log sleep",
+                        action_url="/dashboard/sleep",
+                    )
+                )
             elif sleep_series.average >= 7.5:
-                insights.append(AIInsight(
-                    title="Your sleep is genuinely good",
-                    body=(
-                        f"Averaging {sleep_series.average:.1f} hours puts you in "
-                        f"the range associated with better insulin sensitivity "
-                        f"and steadier mood. This is worth protecting."
-                    ),
-                    category="sleep", severity="positive",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Your sleep is genuinely good",
+                        body=(
+                            f"Averaging {sleep_series.average:.1f} hours puts you in "
+                            f"the range associated with better insulin sensitivity "
+                            f"and steadier mood. This is worth protecting."
+                        ),
+                        category="sleep",
+                        severity="positive",
+                    )
+                )
 
         # --- movement ---
         week_minutes = sum(row["minutes"] for row in workout_days[-7:])
         if week_minutes >= 150:
-            insights.append(AIInsight(
-                title=f"{week_minutes} active minutes this week",
-                body=(
-                    "You have met the 150-minute guideline. For PCOS "
-                    "specifically, make sure two of those sessions include "
-                    "resistance training — muscle is where glucose gets used."
-                ),
-                category="fitness", severity="positive",
-            ))
+            insights.append(
+                AIInsight(
+                    title=f"{week_minutes} active minutes this week",
+                    body=(
+                        "You have met the 150-minute guideline. For PCOS "
+                        "specifically, make sure two of those sessions include "
+                        "resistance training — muscle is where glucose gets used."
+                    ),
+                    category="fitness",
+                    severity="positive",
+                )
+            )
         elif week_minutes > 0:
-            insights.append(AIInsight(
-                title="Movement is below target",
-                body=(
-                    f"You logged {week_minutes} active minutes this week against "
-                    f"a 150-minute guideline. Exercise improves insulin "
-                    f"sensitivity independently of weight loss, so frequency "
-                    f"matters more than intensity — three brisk 30-minute walks "
-                    f"would close most of this gap."
-                ),
-                category="fitness", severity="attention",
-                action_label="Generate a plan", action_url="/dashboard/workouts",
-            ))
+            insights.append(
+                AIInsight(
+                    title="Movement is below target",
+                    body=(
+                        f"You logged {week_minutes} active minutes this week against "
+                        f"a 150-minute guideline. Exercise improves insulin "
+                        f"sensitivity independently of weight loss, so frequency "
+                        f"matters more than intensity — three brisk 30-minute walks "
+                        f"would close most of this gap."
+                    ),
+                    category="fitness",
+                    severity="attention",
+                    action_label="Generate a plan",
+                    action_url="/dashboard/workouts",
+                )
+            )
 
         # --- hydration ---
         if water_rows:
             met_goal = sum(1 for r in water_rows if r.goal_percentage >= 100)
             rate = met_goal / len(water_rows) * 100
             if rate < 50:
-                insights.append(AIInsight(
-                    title="Hydration is inconsistent",
-                    body=(
-                        f"You hit your water goal on {met_goal} of "
-                        f"{len(water_rows)} logged days. Keeping a filled bottle "
-                        f"visible on your desk is the single most effective fix."
-                    ),
-                    category="hydration", severity="info",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Hydration is inconsistent",
+                        body=(
+                            f"You hit your water goal on {met_goal} of "
+                            f"{len(water_rows)} logged days. Keeping a filled bottle "
+                            f"visible on your desk is the single most effective fix."
+                        ),
+                        category="hydration",
+                        severity="info",
+                    )
+                )
 
         # --- cycle ---
         if cycle_insights.total_cycles >= 3:
             if cycle_insights.regularity_label == "Highly irregular":
-                insights.append(AIInsight(
-                    title="Your cycles vary substantially",
-                    body=(
-                        f"Across {cycle_insights.total_cycles} logged cycles your "
-                        f"length varies by about "
-                        f"{cycle_insights.cycle_length_std_dev} days. Variability "
-                        f"is exactly the pattern worth showing a clinician — "
-                        f"export your log and take it to your next appointment."
-                    ),
-                    category="cycle", severity="attention",
-                    action_label="View cycle data", action_url="/dashboard/cycle",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Your cycles vary substantially",
+                        body=(
+                            f"Across {cycle_insights.total_cycles} logged cycles your "
+                            f"length varies by about "
+                            f"{cycle_insights.cycle_length_std_dev} days. Variability "
+                            f"is exactly the pattern worth showing a clinician — "
+                            f"export your log and take it to your next appointment."
+                        ),
+                        category="cycle",
+                        severity="attention",
+                        action_label="View cycle data",
+                        action_url="/dashboard/cycle",
+                    )
+                )
             elif cycle_insights.regularity_label == "Regular":
-                insights.append(AIInsight(
-                    title="Your cycles are tracking regularly",
-                    body=(
-                        f"Averaging {cycle_insights.average_cycle_length} days "
-                        f"with low variability. Keep logging — a consistent "
-                        f"record is what makes any future change obvious."
-                    ),
-                    category="cycle", severity="positive",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Your cycles are tracking regularly",
+                        body=(
+                            f"Averaging {cycle_insights.average_cycle_length} days "
+                            f"with low variability. Keep logging — a consistent "
+                            f"record is what makes any future change obvious."
+                        ),
+                        category="cycle",
+                        severity="positive",
+                    )
+                )
 
         # --- habits ---
         best = max(habit_stats, key=lambda h: h["current_streak"], default=None)
         if best and best["current_streak"] >= 7:
-            insights.append(AIInsight(
-                title=f"{best['current_streak']}-day streak on {best['name']}",
-                body=(
-                    "Consistency at this length is where habits start running "
-                    "on autopilot. Protect the streak, and remember the rule "
-                    "that matters is never missing twice."
-                ),
-                category="habits", severity="positive",
-            ))
+            insights.append(
+                AIInsight(
+                    title=f"{best['current_streak']}-day streak on {best['name']}",
+                    body=(
+                        "Consistency at this length is where habits start running "
+                        "on autopilot. Protect the streak, and remember the rule "
+                        "that matters is never missing twice."
+                    ),
+                    category="habits",
+                    severity="positive",
+                )
+            )
 
         # --- mood ---
         if len(mood_rows) >= 5:
             avg_mood = statistics.mean(r.mood_score for r in mood_rows)
             avg_stress = statistics.mean(r.stress_level for r in mood_rows)
             if avg_mood <= 2.4 or avg_stress >= 4.0:
-                insights.append(AIInsight(
-                    title="Your mood logs suggest a hard stretch",
-                    body=(
-                        "Rates of anxiety and low mood are meaningfully higher in "
-                        "PCOS, and it is not something to push through alone. "
-                        "Talking to a professional is a reasonable step, and the "
-                        "Mental Wellness Coach is here in the meantime."
-                    ),
-                    category="mental_wellness", severity="attention",
-                    action_label="Talk it through", action_url="/chat",
-                ))
+                insights.append(
+                    AIInsight(
+                        title="Your mood logs suggest a hard stretch",
+                        body=(
+                            "Rates of anxiety and low mood are meaningfully higher in "
+                            "PCOS, and it is not something to push through alone. "
+                            "Talking to a professional is a reasonable step, and the "
+                            "Mental Wellness Coach is here in the meantime."
+                        ),
+                        category="mental_wellness",
+                        severity="attention",
+                        action_label="Talk it through",
+                        action_url="/chat",
+                    )
+                )
 
         if not insights:
-            insights.append(AIInsight(
-                title="Log a few days to unlock insights",
-                body=(
-                    "Oviora builds its observations from your own data. Log "
-                    "sleep, meals and movement for about a week and this space "
-                    "will fill with patterns specific to you."
-                ),
-                category="onboarding", severity="info",
-                action_label="Start logging", action_url="/dashboard",
-            ))
+            insights.append(
+                AIInsight(
+                    title="Log a few days to unlock insights",
+                    body=(
+                        "Oviora builds its observations from your own data. Log "
+                        "sleep, meals and movement for about a week and this space "
+                        "will fill with patterns specific to you."
+                    ),
+                    category="onboarding",
+                    severity="info",
+                    action_label="Start logging",
+                    action_url="/dashboard",
+                )
+            )
 
         # Positive first: a wall of criticism is how people stop opening an app.
         order = {"positive": 0, "attention": 1, "info": 2}
@@ -542,19 +645,23 @@ class AnalyticsService:
 
         avg_calories = (
             round(statistics.mean(r["calories"] for r in meal_totals), 1)
-            if meal_totals else None
+            if meal_totals
+            else None
         )
         avg_water = (
             round(statistics.mean(r.millilitres for r in water_rows), 1)
-            if water_rows else None
+            if water_rows
+            else None
         )
         mood_avg = (
             round(statistics.mean(r.mood_score for r in mood_rows), 2)
-            if mood_rows else None
+            if mood_rows
+            else None
         )
         habit_rate = (
             round(statistics.mean(h["completion_rate_30d"] for h in habit_stats), 1)
-            if habit_stats else 0.0
+            if habit_stats
+            else 0.0
         )
         total_minutes = sum(w.duration_minutes for w in workouts)
 
@@ -614,12 +721,19 @@ class AnalyticsService:
 
         dashboard_insights = self._generate_insights(
             weight_series=self._series(
-                "weight", "kg", {r.logged_on: r.weight_kg for r in weight_rows},
-                start, today, lower_is_better=True,
+                "weight",
+                "kg",
+                {r.logged_on: r.weight_kg for r in weight_rows},
+                start,
+                today,
+                lower_is_better=True,
             ),
             sleep_series=self._series(
-                "sleep", "hours", {r.logged_on: r.hours for r in sleep_rows},
-                start, today,
+                "sleep",
+                "hours",
+                {r.logged_on: r.hours for r in sleep_rows},
+                start,
+                today,
             ),
             water_rows=await self.water.list_between(user_id, start, today),
             mood_rows=mood_rows,
@@ -635,24 +749,40 @@ class AnalyticsService:
             month=today.strftime("%B %Y"),
             days_tracked=len(tracked_days),
             weight_series=self._series(
-                "weight", "kg", {r.logged_on: r.weight_kg for r in weight_rows},
-                start, today, lower_is_better=True,
+                "weight",
+                "kg",
+                {r.logged_on: r.weight_kg for r in weight_rows},
+                start,
+                today,
+                lower_is_better=True,
             ),
             sleep_series=self._series(
-                "sleep", "hours", {r.logged_on: r.hours for r in sleep_rows},
-                start, today,
+                "sleep",
+                "hours",
+                {r.logged_on: r.hours for r in sleep_rows},
+                start,
+                today,
             ),
             calorie_series=self._series(
-                "calories", "kcal", {r["date"]: r["calories"] for r in meal_totals},
-                start, today,
+                "calories",
+                "kcal",
+                {r["date"]: r["calories"] for r in meal_totals},
+                start,
+                today,
             ),
             mood_series=self._series(
-                "mood", "score",
-                {r.logged_on: float(r.mood_score) for r in mood_rows}, start, today,
+                "mood",
+                "score",
+                {r.logged_on: float(r.mood_score) for r in mood_rows},
+                start,
+                today,
             ),
             workout_series=self._series(
-                "workout_minutes", "minutes",
-                {r["date"]: float(r["minutes"]) for r in workout_days}, start, today,
+                "workout_minutes",
+                "minutes",
+                {r["date"]: float(r["minutes"]) for r in workout_days},
+                start,
+                today,
             ),
             symptom_frequency=[
                 {

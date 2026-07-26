@@ -99,7 +99,9 @@ class MonthlyAnalytics(BaseModel):
     cycle_regularity: dict
     macro_averages: dict[str, float]
     consistency_score: float = Field(
-        ..., ge=0, le=100,
+        ...,
+        ge=0,
+        le=100,
         description="Share of days in the month with at least one log entry.",
     )
     insights: list[AIInsight]

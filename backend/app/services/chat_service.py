@@ -55,9 +55,7 @@ class ChatService:
                     "message_count": conversation.message_count,
                     "created_at": conversation.created_at,
                     "updated_at": conversation.updated_at,
-                    "last_message_preview": (
-                        last[0].content[:120] if last else None
-                    ),
+                    "last_message_preview": (last[0].content[:120] if last else None),
                 }
             )
         return out

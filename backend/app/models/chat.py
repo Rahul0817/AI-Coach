@@ -22,9 +22,9 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.types import GUID, JSONDict
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import MessageRole
+from app.models.types import GUID, JSONDict
 
 if TYPE_CHECKING:  # pragma: no cover
     from app.models.user import User
@@ -34,9 +34,7 @@ class Conversation(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     """A chat thread, equivalent to one ChatGPT conversation."""
 
     __tablename__ = "conversations"
-    __table_args__ = (
-        Index("ix_conversation_user_updated", "user_id", "updated_at"),
-    )
+    __table_args__ = (Index("ix_conversation_user_updated", "user_id", "updated_at"),)
 
     title: Mapped[str] = mapped_column(
         String(160), default="New conversation", nullable=False
@@ -50,8 +48,8 @@ class Conversation(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     summarised_up_to: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     message_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
-    user: Mapped["User"] = relationship(back_populates="conversations")
-    messages: Mapped[list["Message"]] = relationship(
+    user: Mapped[User] = relationship(back_populates="conversations")
+    messages: Mapped[list[Message]] = relationship(
         back_populates="conversation",
         cascade="all, delete-orphan",
         order_by="Message.sequence",
@@ -95,7 +93,7 @@ class Message(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     model: Mapped[str | None] = mapped_column(String(60), nullable=True)
 
-    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
+    conversation: Mapped[Conversation] = relationship(back_populates="messages")
 
     @property
     def is_user(self) -> bool:

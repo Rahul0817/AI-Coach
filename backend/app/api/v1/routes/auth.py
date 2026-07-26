@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Request, status
 
 from app.api.deps import (
     AuthServiceDep,
@@ -37,9 +37,7 @@ COMMON_ERRORS = {
     summary="Create an account",
     responses={409: {"model": ErrorResponse, "description": "Email already registered"}},
 )
-async def register(
-    payload: RegisterRequest, service: AuthServiceDep
-) -> TokenPair:
+async def register(payload: RegisterRequest, service: AuthServiceDep) -> TokenPair:
     """Register a new account and return a token pair.
 
     Tokens are issued immediately so the client does not have to follow
@@ -116,12 +114,10 @@ async def me(user: CurrentUser, service: UserServiceDep) -> UserWithProfile:
 async def change_password(
     payload: ChangePasswordRequest, user: CurrentUser, service: AuthServiceDep
 ) -> MessageResponse:
-    await service.change_password(
-        user.id, payload.current_password, payload.new_password
-    )
+    await service.change_password(user.id, payload.current_password, payload.new_password)
     return MessageResponse(
         message="Password updated. Existing sessions on other devices remain "
-                "signed in until their tokens expire."
+        "signed in until their tokens expire."
     )
 
 
@@ -142,5 +138,5 @@ async def delete_account(
     await service.delete_account(user.id, payload.password)
     return MessageResponse(
         message="Your account and all associated health data have been "
-                "permanently deleted."
+        "permanently deleted."
     )

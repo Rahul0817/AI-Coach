@@ -39,9 +39,7 @@ class HabitRepository(BaseRepository[Habit]):
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
-    async def get_with_entries(
-        self, habit_id: uuid.UUID, user_id: uuid.UUID
-    ) -> Habit:
+    async def get_with_entries(self, habit_id: uuid.UUID, user_id: uuid.UUID) -> Habit:
         stmt = (
             select(Habit)
             .where(Habit.id == habit_id, Habit.user_id == user_id)
@@ -77,9 +75,7 @@ class HabitEntryRepository(BaseRepository[HabitEntry]):
             note=note,
         )
 
-    async def entries_since(
-        self, habit_id: uuid.UUID, since: date
-    ) -> list[HabitEntry]:
+    async def entries_since(self, habit_id: uuid.UUID, since: date) -> list[HabitEntry]:
         stmt = (
             select(HabitEntry)
             .where(HabitEntry.habit_id == habit_id, HabitEntry.logged_on >= since)
@@ -218,9 +214,7 @@ class WeightRepository(_DailyUpsertRepository):
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def change_over(
-        self, user_id: uuid.UUID, days: int
-    ) -> float | None:
+    async def change_over(self, user_id: uuid.UUID, days: int) -> float | None:
         """Net weight change across the last ``days`` days, or ``None``.
 
         Returns ``None`` unless there are at least two measurements, because a

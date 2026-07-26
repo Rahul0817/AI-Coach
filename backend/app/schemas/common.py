@@ -59,7 +59,7 @@ class Page(BaseModel, Generic[T]):
     meta: PaginationMeta
 
     @classmethod
-    def build(cls, items: list[T], total: int, page: int, page_size: int) -> "Page[T]":
+    def build(cls, items: list[T], total: int, page: int, page_size: int) -> Page[T]:
         total_pages = max(1, -(-total // page_size))  # ceil division
         return cls(
             items=items,

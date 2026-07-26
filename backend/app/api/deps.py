@@ -194,9 +194,7 @@ DailyTrackerServiceDep = Annotated[
 ]
 AnalyticsServiceDep = Annotated[AnalyticsService, Depends(get_analytics_service)]
 ReportServiceDep = Annotated[ReportService, Depends(get_report_service)]
-NotificationServiceDep = Annotated[
-    NotificationService, Depends(get_notification_service)
-]
+NotificationServiceDep = Annotated[NotificationService, Depends(get_notification_service)]
 PlanServiceDep = Annotated[PlanService, Depends(get_plan_service)]
 
 

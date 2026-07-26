@@ -194,9 +194,7 @@ async def log_workout(
     return WorkoutResponse.model_validate(workout)
 
 
-@router.get(
-    "/workouts", response_model=list[WorkoutResponse], summary="List workouts"
-)
+@router.get("/workouts", response_model=list[WorkoutResponse], summary="List workouts")
 async def list_workouts(
     user_id: CurrentUserId, service: WorkoutServiceDep, window: DateWindowDep
 ) -> list[WorkoutResponse]:
@@ -224,8 +222,11 @@ async def upsert_water(
     """Water is one row per day, so this is idempotent — PUT, not POST."""
     row = await service.upsert_water(user_id, payload)
     return WaterResponse(
-        id=row.id, logged_on=row.logged_on, millilitres=row.millilitres,
-        goal_millilitres=row.goal_millilitres, goal_percentage=row.goal_percentage,
+        id=row.id,
+        logged_on=row.logged_on,
+        millilitres=row.millilitres,
+        goal_millilitres=row.goal_millilitres,
+        goal_percentage=row.goal_percentage,
     )
 
 
@@ -236,8 +237,11 @@ async def list_water(
     rows = await service.water_range(user_id, window.start, window.end)
     return [
         WaterResponse(
-            id=r.id, logged_on=r.logged_on, millilitres=r.millilitres,
-            goal_millilitres=r.goal_millilitres, goal_percentage=r.goal_percentage,
+            id=r.id,
+            logged_on=r.logged_on,
+            millilitres=r.millilitres,
+            goal_millilitres=r.goal_millilitres,
+            goal_percentage=r.goal_percentage,
         )
         for r in rows
     ]
@@ -268,8 +272,11 @@ async def upsert_weight(
     row = await service.upsert_weight(user_id, payload)
     profile = await service.profiles.get_by_user(user_id)
     return WeightResponse(
-        id=row.id, logged_on=row.logged_on, weight_kg=row.weight_kg,
-        body_fat_percentage=row.body_fat_percentage, waist_cm=row.waist_cm,
+        id=row.id,
+        logged_on=row.logged_on,
+        weight_kg=row.weight_kg,
+        body_fat_percentage=row.body_fat_percentage,
+        waist_cm=row.waist_cm,
         bmi=profile.bmi if profile else None,
     )
 
@@ -288,9 +295,13 @@ async def upsert_mood(
 ) -> MoodResponse:
     row = await service.upsert_mood(user_id, payload)
     return MoodResponse(
-        id=row.id, logged_on=row.logged_on, mood=row.mood,
-        energy_level=row.energy_level, stress_level=row.stress_level,
-        journal=row.journal, mood_score=row.mood_score,
+        id=row.id,
+        logged_on=row.logged_on,
+        mood=row.mood,
+        energy_level=row.energy_level,
+        stress_level=row.stress_level,
+        journal=row.journal,
+        mood_score=row.mood_score,
     )
 
 
@@ -301,9 +312,13 @@ async def list_mood(
     rows = await service.mood_range(user_id, window.start, window.end)
     return [
         MoodResponse(
-            id=r.id, logged_on=r.logged_on, mood=r.mood,
-            energy_level=r.energy_level, stress_level=r.stress_level,
-            journal=r.journal, mood_score=r.mood_score,
+            id=r.id,
+            logged_on=r.logged_on,
+            mood=r.mood,
+            energy_level=r.energy_level,
+            stress_level=r.stress_level,
+            journal=r.journal,
+            mood_score=r.mood_score,
         )
         for r in rows
     ]

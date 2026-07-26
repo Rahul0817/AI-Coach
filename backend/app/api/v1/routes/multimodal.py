@@ -167,8 +167,7 @@ async def analyse_food(
     storage = get_storage()
     if content_type not in SUPPORTED_IMAGE_TYPES:
         raise UnsupportedMediaError(
-            f"'{content_type}' is not a supported image format. Use JPEG, PNG "
-            f"or WebP."
+            f"'{content_type}' is not a supported image format. Use JPEG, PNG or WebP."
         )
     if len(data) > MAX_IMAGE_BYTES:
         raise UnsupportedMediaError("Image exceeds the 8MB limit.")
@@ -178,7 +177,7 @@ async def analyse_food(
     try:
         stored = await storage.upload(data, content_type, "meals", user_id)
         image_url = stored.url
-    except Exception:
+    except Exception:  # noqa: S110
         # Storage is not on the critical path — the analysis is what the user
         # asked for, and losing the thumbnail should not fail the request.
         pass

@@ -27,9 +27,7 @@ class BloodReportRepository(BaseRepository[BloodReport]):
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
-    async def get_detail(
-        self, report_id: uuid.UUID, user_id: uuid.UUID
-    ) -> BloodReport:
+    async def get_detail(self, report_id: uuid.UUID, user_id: uuid.UUID) -> BloodReport:
         stmt = (
             select(BloodReport)
             .where(BloodReport.id == report_id, BloodReport.user_id == user_id)

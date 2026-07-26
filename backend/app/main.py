@@ -25,8 +25,8 @@ availability trade.
 from __future__ import annotations
 
 import time
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, status
@@ -92,13 +92,34 @@ Access tokens last 30 minutes; refresh them at `POST /api/v1/auth/refresh`.
 
 TAGS_METADATA = [
     {"name": "System", "description": "Health checks and service capabilities."},
-    {"name": "Authentication", "description": "Registration, sign-in and account lifecycle."},
-    {"name": "Profile & Settings", "description": "Health profile, data export and AI memory."},
-    {"name": "AI Chat", "description": "Multi-agent chat, streaming and conversation history."},
-    {"name": "Cycle, Symptoms & Risk", "description": "Cycle tracking, symptom logs and the explainable risk model."},
-    {"name": "Daily Tracking", "description": "Habits, meals, workouts, water, sleep, weight, mood and AI plan generation."},
-    {"name": "Dashboard & Analytics", "description": "Aggregated metrics, trends, insights and notifications."},
-    {"name": "Reports, Vision & Voice", "description": "Blood-report OCR, meal-photo analysis and speech."},
+    {
+        "name": "Authentication",
+        "description": "Registration, sign-in and account lifecycle.",
+    },
+    {
+        "name": "Profile & Settings",
+        "description": "Health profile, data export and AI memory.",
+    },
+    {
+        "name": "AI Chat",
+        "description": "Multi-agent chat, streaming and conversation history.",
+    },
+    {
+        "name": "Cycle, Symptoms & Risk",
+        "description": "Cycle tracking, symptom logs and the explainable risk model.",
+    },
+    {
+        "name": "Daily Tracking",
+        "description": "Habits, meals, workouts, water, sleep, weight, mood and AI plan generation.",
+    },
+    {
+        "name": "Dashboard & Analytics",
+        "description": "Aggregated metrics, trends, insights and notifications.",
+    },
+    {
+        "name": "Reports, Vision & Voice",
+        "description": "Blood-report OCR, meal-photo analysis and speech.",
+    },
 ]
 
 
@@ -129,9 +150,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     from app.ml.predictor import RiskPredictor
 
     if not RiskPredictor.instance().load():
-        logger.warning(
-            "prediction endpoints will return 503 until the model is trained"
-        )
+        logger.warning("prediction endpoints will return 503 until the model is trained")
 
     # --- optional capability: retrieval ---
     try:

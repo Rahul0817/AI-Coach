@@ -75,13 +75,13 @@ class DatasetBundle:
 SYMPTOM_PROBABILITIES: dict[str, tuple[float, float]] = {
     # feature:            (P | no PCOS, P | PCOS)
     "cycle_irregularity": (0.12, 0.82),
-    "weight_gain":        (0.22, 0.63),
-    "hair_growth":        (0.10, 0.68),
-    "skin_darkening":     (0.07, 0.42),
-    "hair_loss":          (0.14, 0.48),
-    "pimples":            (0.28, 0.61),
-    "family_history":     (0.09, 0.35),
-    "fast_food":          (0.38, 0.52),
+    "weight_gain": (0.22, 0.63),
+    "hair_growth": (0.10, 0.68),
+    "skin_darkening": (0.07, 0.42),
+    "hair_loss": (0.14, 0.48),
+    "pimples": (0.28, 0.61),
+    "family_history": (0.09, 0.35),
+    "fast_food": (0.38, 0.52),
 }
 
 
@@ -109,15 +109,13 @@ def generate_cohort(n: int = 6000, seed: int = 42) -> pd.DataFrame:
     age = np.clip(rng.normal(27, 6.5, n), 15, 48).round().astype(int)
     # Prevalence peaks around 25 and tapers at both ends of the range.
     age_modifier = 1.0 + 0.45 * np.exp(-((age - 25) ** 2) / (2 * 8.0**2)) - 0.20
-    prevalence = np.clip(
-        BASE_PREVALENCE * age_modifier * COHORT_ENRICHMENT, 0.03, 0.45
-    )
+    prevalence = np.clip(BASE_PREVALENCE * age_modifier * COHORT_ENRICHMENT, 0.03, 0.45)
     pcos = rng.binomial(1, prevalence).astype(int)
 
     # ---- 2. BMI, conditional on status ------------------------------------
     bmi = np.where(
         pcos == 1,
-        rng.normal(28.6, 5.4, n),   # higher mean, wider spread
+        rng.normal(28.6, 5.4, n),  # higher mean, wider spread
         rng.normal(23.8, 3.9, n),
     )
     bmi = np.clip(bmi, 15.0, 48.0).round(1)
@@ -136,21 +134,15 @@ def generate_cohort(n: int = 6000, seed: int = 42) -> pd.DataFrame:
     ).astype(int)
 
     # ---- 4. lifestyle, partly driven by BMI -------------------------------
-    exercise = np.clip(
-        rng.gamma(2.0, 1.4, n) - (bmi - 24) * 0.08, 0.0, 20.0
-    ).round(1)
-    activity_index = np.clip(
-        np.digitize(exercise, [0.5, 2.0, 4.0, 7.0]), 0, 4
-    ).astype(int)
+    exercise = np.clip(rng.gamma(2.0, 1.4, n) - (bmi - 24) * 0.08, 0.0, 20.0).round(1)
+    activity_index = np.clip(np.digitize(exercise, [0.5, 2.0, 4.0, 7.0]), 0, 4).astype(
+        int
+    )
     reverse_map = {v: k for k, v in ACTIVITY_SCORE_MAP.items()}
     activity_level = np.array([reverse_map[int(i)] for i in activity_index])
 
-    sleep = np.clip(
-        rng.normal(7.1, 1.2, n) - pcos * 0.45, 3.0, 11.0
-    ).round(1)
-    stress = np.clip(
-        rng.normal(2.9 + pcos * 0.55, 1.05, n), 1, 5
-    ).round().astype(int)
+    sleep = np.clip(rng.normal(7.1, 1.2, n) - pcos * 0.45, 3.0, 11.0).round(1)
+    stress = np.clip(rng.normal(2.9 + pcos * 0.55, 1.05, n), 1, 5).round().astype(int)
 
     # ---- 5. cycle length: mixture conditioned on irregularity -------------
     irregular = symptoms["cycle_irregularity"]
@@ -209,7 +201,9 @@ def inject_missing_values(
     return out
 
 
-def load_dataset(*, force_synthetic: bool = False, n: int = 6000, seed: int = 42) -> DatasetBundle:
+def load_dataset(
+    *, force_synthetic: bool = False, n: int = 6000, seed: int = 42
+) -> DatasetBundle:
     """Return the training dataset, preferring a real CSV when one is present."""
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 

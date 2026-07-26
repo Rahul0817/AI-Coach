@@ -96,9 +96,7 @@ class MessageRepository(BaseRepository[Message]):
         )
         return list((await self.session.execute(stmt)).scalars().all())
 
-    async def last_user_message(
-        self, conversation_id: uuid.UUID
-    ) -> Message | None:
+    async def last_user_message(self, conversation_id: uuid.UUID) -> Message | None:
         stmt = (
             select(Message)
             .where(

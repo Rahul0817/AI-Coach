@@ -55,9 +55,12 @@ class TestRiskBanding:
     @pytest.mark.parametrize(
         ("score", "band"),
         [
-            (0.0, RiskBand.LOW), (0.34, RiskBand.LOW),
-            (0.35, RiskBand.MODERATE), (0.64, RiskBand.MODERATE),
-            (0.65, RiskBand.HIGH), (1.0, RiskBand.HIGH),
+            (0.0, RiskBand.LOW),
+            (0.34, RiskBand.LOW),
+            (0.35, RiskBand.MODERATE),
+            (0.64, RiskBand.MODERATE),
+            (0.65, RiskBand.HIGH),
+            (1.0, RiskBand.HIGH),
         ],
     )
     def test_band_boundaries(self, score: float, band: RiskBand) -> None:
@@ -117,8 +120,11 @@ class TestNutritionScoring:
     def test_balanced_meal_outscores_refined_one(self) -> None:
         from app.ai.multimodal.nutrition_db import FOODS
 
-        wholesome = [(FOODS["dal"], 200.0), (FOODS["roti"], 80.0),
-                     (FOODS["salad"], 100.0)]
+        wholesome = [
+            (FOODS["dal"], 200.0),
+            (FOODS["roti"], 80.0),
+            (FOODS["salad"], 100.0),
+        ]
         refined = [(FOODS["white_rice"], 250.0), (FOODS["soft_drink"], 330.0)]
 
         good, _ = score_meal(wholesome)
@@ -146,8 +152,12 @@ class TestBiomarkerParsing:
     def test_parses_every_marker(self) -> None:
         parsed = {b.key for b in parse_biomarkers(self.SAMPLE)}
         assert {
-            "total_testosterone", "shbg", "fasting_insulin",
-            "hba1c", "tsh", "triglycerides",
+            "total_testosterone",
+            "shbg",
+            "fasting_insulin",
+            "hba1c",
+            "tsh",
+            "triglycerides",
         } <= parsed
 
     def test_flags_are_correct(self) -> None:

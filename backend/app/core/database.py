@@ -105,10 +105,10 @@ def create_engine(uri: str | None = None) -> AsyncEngine:
         target,
         echo=False,
         future=True,
-        pool_pre_ping=True,   # transparently drops connections killed by the DB
+        pool_pre_ping=True,  # transparently drops connections killed by the DB
         pool_size=10,
         max_overflow=20,
-        pool_recycle=1800,    # stay under most managed-Postgres idle timeouts
+        pool_recycle=1800,  # stay under most managed-Postgres idle timeouts
     )
 
 

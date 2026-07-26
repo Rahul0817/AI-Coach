@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, timedelta
+from itertools import pairwise
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -45,8 +46,14 @@ from app.schemas.tracking import (
 #: MET values (metabolic equivalents) per workout type at moderate intensity,
 #: used to estimate energy expenditure when the user does not supply a figure.
 MET_VALUES = {
-    "strength": 5.0, "cardio": 7.0, "hiit": 9.0, "yoga": 3.0,
-    "walking": 3.5, "pilates": 3.5, "mobility": 2.5, "rest": 1.0,
+    "strength": 5.0,
+    "cardio": 7.0,
+    "hiit": 9.0,
+    "yoga": 3.0,
+    "walking": 3.5,
+    "pilates": 3.5,
+    "mobility": 2.5,
+    "rest": 1.0,
 }
 INTENSITY_MULTIPLIER = {"low": 0.75, "moderate": 1.0, "high": 1.3}
 
@@ -170,7 +177,7 @@ class HabitService:
             return 0
         ordered = sorted(days)
         longest = run = 1
-        for previous, current in zip(ordered, ordered[1:]):
+        for previous, current in pairwise(ordered):
             run = run + 1 if (current - previous).days == 1 else 1
             longest = max(longest, run)
         return longest
@@ -209,9 +216,7 @@ class MealService:
         await self.meals.delete_for_user(meal_id, user_id)
         await self.session.commit()
 
-    async def daily_summary(
-        self, user_id: uuid.UUID, day: date
-    ) -> NutritionSummary:
+    async def daily_summary(self, user_id: uuid.UUID, day: date) -> NutritionSummary:
         meals = await self.meals.for_day(user_id, day)
         profile = await self.profiles.get_by_user(user_id)
 
@@ -268,8 +273,11 @@ class MealService:
         # Female coefficient; Oviora's user base is women with PCOS.
         bmr = 10 * profile.weight_kg + 6.25 * profile.height_cm - 5 * age - 161
         factors = {
-            "sedentary": 1.2, "light": 1.375, "moderate": 1.55,
-            "active": 1.725, "very_active": 1.9,
+            "sedentary": 1.2,
+            "light": 1.375,
+            "moderate": 1.55,
+            "active": 1.725,
+            "very_active": 1.9,
         }
         maintenance = bmr * factors.get(profile.activity_level, 1.55)
         protein_goal = round(profile.weight_kg * 1.4, 1)
@@ -286,8 +294,10 @@ class WorkoutService:
         calories = payload.calories_burned
         if calories is None:
             calories = await self._estimate_calories(
-                user_id, payload.workout_type.value,
-                payload.intensity.value, payload.duration_minutes,
+                user_id,
+                payload.workout_type.value,
+                payload.intensity.value,
+                payload.duration_minutes,
             )
 
         workout = await self.workouts.create(
@@ -335,7 +345,8 @@ class DailyTrackerService:
 
     async def upsert_water(self, user_id: uuid.UUID, payload: WaterUpsert) -> WaterLog:
         row = await self.water.upsert(
-            user_id, payload.logged_on,
+            user_id,
+            payload.logged_on,
             millilitres=payload.millilitres,
             goal_millilitres=payload.goal_millilitres,
         )
@@ -344,19 +355,21 @@ class DailyTrackerService:
 
     async def upsert_sleep(self, user_id: uuid.UUID, payload: SleepUpsert) -> SleepLog:
         row = await self.sleep.upsert(
-            user_id, payload.logged_on,
-            hours=payload.hours, quality=payload.quality,
-            bedtime=payload.bedtime, wake_time=payload.wake_time,
+            user_id,
+            payload.logged_on,
+            hours=payload.hours,
+            quality=payload.quality,
+            bedtime=payload.bedtime,
+            wake_time=payload.wake_time,
             notes=payload.notes,
         )
         await self.session.commit()
         return row
 
-    async def upsert_weight(
-        self, user_id: uuid.UUID, payload: WeightUpsert
-    ) -> WeightLog:
+    async def upsert_weight(self, user_id: uuid.UUID, payload: WeightUpsert) -> WeightLog:
         row = await self.weight.upsert(
-            user_id, payload.logged_on,
+            user_id,
+            payload.logged_on,
             weight_kg=payload.weight_kg,
             body_fat_percentage=payload.body_fat_percentage,
             waist_cm=payload.waist_cm,
@@ -372,7 +385,8 @@ class DailyTrackerService:
 
     async def upsert_mood(self, user_id: uuid.UUID, payload: MoodUpsert) -> MoodLog:
         row = await self.mood.upsert(
-            user_id, payload.logged_on,
+            user_id,
+            payload.logged_on,
             mood=payload.mood.value,
             energy_level=payload.energy_level,
             stress_level=payload.stress_level,

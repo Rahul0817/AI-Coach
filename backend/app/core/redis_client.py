@@ -182,7 +182,9 @@ class CacheService:
     async def delete(self, *keys: str) -> None:
         await self._backend.delete(*keys)
 
-    async def hit_rate_limit(self, key: str, limit: int, window: int) -> tuple[bool, int, int]:
+    async def hit_rate_limit(
+        self, key: str, limit: int, window: int
+    ) -> tuple[bool, int, int]:
         """Increment a counter and report whether the caller is over budget.
 
         Returns ``(allowed, remaining, retry_after_seconds)``.
@@ -260,5 +262,5 @@ def get_cache() -> CacheService:
 async def close_cache() -> None:
     global _cache
     if _cache is not None and isinstance(_cache.backend, RedisBackend):
-        await _cache.backend._client.aclose()  # noqa: SLF001 - adapter teardown
+        await _cache.backend._client.aclose()
     _cache = None

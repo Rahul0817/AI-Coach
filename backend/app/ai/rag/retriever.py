@@ -28,7 +28,7 @@ from typing import Any
 
 from app.ai.llm.embeddings import tokenize
 from app.ai.llm.factory import get_embedding_provider
-from app.ai.rag.loader import DocumentChunk, load_knowledge_base
+from app.ai.rag.loader import load_knowledge_base
 from app.ai.rag.vector_store import VectorStore, get_vector_store
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -228,7 +228,7 @@ class KnowledgeRetriever:
                 if self._lookup.get(doc_id, {}).get("metadata", {}).get("category")
                 == category
             ]
-        lexical_scores = {doc_id: score for doc_id, score in lexical}
+        lexical_scores = dict(lexical)
 
         # --- quality gate, applied BEFORE truncation -----------------------
         # Filtering after taking the top k would discard good hits that a weak

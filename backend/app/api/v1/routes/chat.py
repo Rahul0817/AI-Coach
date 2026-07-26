@@ -13,7 +13,6 @@ from app.ai.agents.prompts import AGENT_DEFINITIONS
 from app.api.deps import (
     Cache,
     ChatServiceDep,
-    CurrentUser,
     CurrentUserId,
     DbSession,
 )
@@ -135,8 +134,12 @@ async def stream_message(
         # delivered as a single well-formed error frame the UI already knows
         # how to render.
         async def error_stream() -> AsyncIterator[str]:
-            yield _sse({"type": "error", "content": "Your session has expired. "
-                                                    "Please sign in again."})
+            yield _sse(
+                {
+                    "type": "error",
+                    "content": "Your session has expired. Please sign in again.",
+                }
+            )
 
         return StreamingResponse(error_stream(), media_type="text/event-stream")
 
@@ -163,7 +166,7 @@ async def stream_message(
                 if await request.is_disconnected():
                     break
                 yield _sse(frame)
-        except Exception as exc:  # noqa: BLE001 - must not break the stream
+        except Exception as exc:
             yield _sse({"type": "error", "content": str(exc)})
         finally:
             yield "event: close\ndata: {}\n\n"
@@ -221,9 +224,7 @@ async def get_conversation(
         created_at=conversation.created_at,
         updated_at=conversation.updated_at,
         summary=conversation.summary,
-        messages=[
-            MessageResponseSchema.model_validate(m) for m in conversation.messages
-        ],
+        messages=[MessageResponseSchema.model_validate(m) for m in conversation.messages],
     )
 
 

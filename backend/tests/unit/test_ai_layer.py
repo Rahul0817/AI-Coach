@@ -29,8 +29,14 @@ class TestAgentRouting:
         [
             ("What should I eat for breakfast?", AgentName.NUTRITION_COACH),
             ("how much protein should I eat", AgentName.NUTRITION_COACH),
-            ("My periods are 45 days apart, is that bad?", AgentName.CYCLE_TRACKER_ASSISTANT),
-            ("trying to conceive with irregular cycles", AgentName.CYCLE_TRACKER_ASSISTANT),
+            (
+                "My periods are 45 days apart, is that bad?",
+                AgentName.CYCLE_TRACKER_ASSISTANT,
+            ),
+            (
+                "trying to conceive with irregular cycles",
+                AgentName.CYCLE_TRACKER_ASSISTANT,
+            ),
             ("Build me a 4 day workout plan", AgentName.FITNESS_COACH),
             ("I feel awful about how I look", AgentName.MENTAL_WELLNESS_COACH),
             ("What does SHBG mean on my report?", AgentName.BLOOD_REPORT_ANALYZER),
@@ -48,9 +54,7 @@ class TestAgentRouting:
     async def test_explicit_selection_overrides_routing(
         self, router: AgentRouter
     ) -> None:
-        result = await router.route(
-            "What should I eat?", forced=AgentName.FITNESS_COACH
-        )
+        result = await router.route("What should I eat?", forced=AgentName.FITNESS_COACH)
         assert result.agent == AgentName.FITNESS_COACH
         assert result.confidence == 1.0
 
@@ -61,9 +65,7 @@ class TestAgentRouting:
         report = await router.route("what is this", has_report=True)
         assert report.agent == AgentName.BLOOD_REPORT_ANALYZER
 
-    async def test_unmatched_query_defaults_safely(
-        self, router: AgentRouter
-    ) -> None:
+    async def test_unmatched_query_defaults_safely(self, router: AgentRouter) -> None:
         result = await router.route("qwertyuiop zxcvbnm")
         assert result.agent == AgentName.HEALTH_EXPERT
         assert result.confidence < 0.5
@@ -105,7 +107,7 @@ class TestMemoryExtraction:
         assert extract_facts(text).values.get(key) == value
 
     def test_imperial_units_converted(self) -> None:
-        facts = extract_facts('I am 5\'4" and 145 lbs').values
+        facts = extract_facts("I am 5'4\" and 145 lbs").values
         assert facts["height_cm"] == pytest.approx(162.6, abs=0.2)
         assert facts["weight_kg"] == pytest.approx(65.8, abs=0.2)
 
@@ -203,9 +205,7 @@ class TestEmbeddings:
         from app.ai.llm.embeddings import LocalHashEmbedder
 
         vector = LocalHashEmbedder()._vectorise("insulin resistance and PCOS")
-        assert math.isclose(
-            math.sqrt(sum(v * v for v in vector)), 1.0, rel_tol=1e-9
-        )
+        assert math.isclose(math.sqrt(sum(v * v for v in vector)), 1.0, rel_tol=1e-9)
 
     def test_identical_text_gives_identical_vectors(self) -> None:
         from app.ai.llm.embeddings import LocalHashEmbedder

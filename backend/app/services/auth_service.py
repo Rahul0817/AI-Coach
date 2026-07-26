@@ -13,9 +13,9 @@ Security properties enforced here rather than in the route handler:
 
 from __future__ import annotations
 
-import asyncio
 import secrets
 import uuid
+from datetime import UTC
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -89,11 +89,11 @@ class AuthService:
         if self.users.is_locked(user):
             remaining = 0
             if user.locked_until:
-                from datetime import datetime, timezone
+                from datetime import datetime
 
                 remaining = max(
                     0,
-                    int((user.locked_until - datetime.now(timezone.utc)).total_seconds()),
+                    int((user.locked_until - datetime.now(UTC)).total_seconds()),
                 )
             raise AuthenticationError(
                 f"This account is temporarily locked after repeated failed "

@@ -9,9 +9,9 @@ from sqlalchemy import Float, ForeignKey, Index, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
-from app.models.types import GUID
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import BiomarkerFlag, ReportStatus
+from app.models.types import GUID
 
 if TYPE_CHECKING:  # pragma: no cover
     from app.models.user import User
@@ -39,8 +39,8 @@ class BloodReport(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_message: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
-    user: Mapped["User"] = relationship(back_populates="reports")
-    biomarkers: Mapped[list["Biomarker"]] = relationship(
+    user: Mapped[User] = relationship(back_populates="reports")
+    biomarkers: Mapped[list[Biomarker]] = relationship(
         back_populates="report", cascade="all, delete-orphan", lazy="selectin"
     )
 
@@ -73,4 +73,4 @@ class Biomarker(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     #: Plain-language explanation shown to the user.
     interpretation: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    report: Mapped["BloodReport"] = relationship(back_populates="biomarkers")
+    report: Mapped[BloodReport] = relationship(back_populates="biomarkers")

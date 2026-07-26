@@ -28,7 +28,7 @@ MAGIC_SIGNATURES: dict[str, list[bytes]] = {
     "application/pdf": [b"%PDF-"],
     "image/jpeg": [b"\xff\xd8\xff"],
     "image/png": [b"\x89PNG\r\n\x1a\n"],
-    "image/webp": [b"RIFF"],           # plus a "WEBP" tag at offset 8
+    "image/webp": [b"RIFF"],  # plus a "WEBP" tag at offset 8
     "image/tiff": [b"II*\x00", b"MM\x00*"],
 }
 

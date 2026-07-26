@@ -35,9 +35,7 @@ class CycleRepository(BaseRepository[CycleLog]):
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def previous_before(
-        self, user_id: uuid.UUID, start: date
-    ) -> CycleLog | None:
+    async def previous_before(self, user_id: uuid.UUID, start: date) -> CycleLog | None:
         """The cycle immediately preceding ``start``.
 
         Used to back-fill ``cycle_length_days`` on the earlier record when a new
@@ -51,9 +49,7 @@ class CycleRepository(BaseRepository[CycleLog]):
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def find_by_start(
-        self, user_id: uuid.UUID, start: date
-    ) -> CycleLog | None:
+    async def find_by_start(self, user_id: uuid.UUID, start: date) -> CycleLog | None:
         return await self.find_one_by(user_id=user_id, start_date=start)
 
     async def average_length(self, user_id: uuid.UUID) -> float | None:
@@ -137,9 +133,7 @@ class PredictionRepository(BaseRepository[Prediction]):
         )
         return (await self.session.execute(stmt)).scalar_one_or_none()
 
-    async def history(
-        self, user_id: uuid.UUID, *, limit: int = 20
-    ) -> list[Prediction]:
+    async def history(self, user_id: uuid.UUID, *, limit: int = 20) -> list[Prediction]:
         stmt = (
             select(Prediction)
             .where(Prediction.user_id == user_id)

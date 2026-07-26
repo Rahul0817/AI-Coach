@@ -199,9 +199,7 @@ class FoodAnalyzerAgent(SpecialistAgent):
     """
 
     async def retrieve(self, query: str) -> list[RetrievedChunk]:
-        return await self.retriever.retrieve(
-            query, category="nutrition", top_k=3
-        )
+        return await self.retriever.retrieve(query, category="nutrition", top_k=3)
 
     def followups(self, query: str) -> list[str]:
         return [
@@ -224,9 +222,7 @@ class CycleAgent(SpecialistAgent):
             "PCOS. **Never use them as a form of contraception.**"
         )
         if "contracept" not in content.lower():
-            content = content.replace(
-                "\n\n---\n\n", f"\n\n_{caveat}_\n\n---\n\n", 1
-            )
+            content = content.replace("\n\n---\n\n", f"\n\n_{caveat}_\n\n---\n\n", 1)
             if caveat not in content:
                 content = f"{content}\n\n_{caveat}_"
         return content

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -84,7 +84,7 @@ class NotificationService:
         every dashboard load. Without it, opening the app five times would
         produce five identical "drink more water" cards.
         """
-        since = datetime.now(timezone.utc) - DEDUPE_WINDOW
+        since = datetime.now(UTC) - DEDUPE_WINDOW
         if await self.notifications.exists_recent(user_id, title, since):
             return None
         return await self.notifications.create(
@@ -179,17 +179,24 @@ class NotificationService:
         ``scheduled_for <= now()`` and no extra infrastructure is required.
         """
         tomorrow = date.today() + timedelta(days=1)
-        when = datetime.combine(
-            tomorrow, datetime.min.time(), tzinfo=timezone.utc
-        ).replace(hour=hour)
+        when = datetime.combine(tomorrow, datetime.min.time(), tzinfo=UTC).replace(
+            hour=hour
+        )
 
         templates = [
-            ("Log your morning check-in",
-             "Weight, sleep and mood take under a minute and are what make your "
-             "trends meaningful.", "sunrise", "/dashboard"),
-            ("How is your water going?",
-             "A quick tap to log your intake keeps the streak alive.",
-             "droplet", "/dashboard/water"),
+            (
+                "Log your morning check-in",
+                "Weight, sleep and mood take under a minute and are what make your "
+                "trends meaningful.",
+                "sunrise",
+                "/dashboard",
+            ),
+            (
+                "How is your water going?",
+                "A quick tap to log your intake keeps the streak alive.",
+                "droplet",
+                "/dashboard/water",
+            ),
         ]
 
         created: list[Notification] = []

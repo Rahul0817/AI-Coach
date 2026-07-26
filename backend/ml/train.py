@@ -34,7 +34,7 @@ import json
 import platform
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -65,8 +65,8 @@ from xgboost import XGBClassifier
 # Allow `python ml/train.py` as well as `python -m ml.train`.
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ml.dataset import TARGET_COLUMN, load_dataset  # noqa: E402
-from ml.features import FEATURE_ORDER, engineer_frame  # noqa: E402
+from ml.dataset import TARGET_COLUMN, load_dataset
+from ml.features import FEATURE_ORDER, engineer_frame
 
 ARTIFACT_DIR = Path(__file__).parent / "artifacts"
 MODEL_FILENAME = "pcos_risk_model.joblib"
@@ -79,9 +79,16 @@ RANDOM_STATE = 42
 #: only need most-frequent imputation — scaling a 0/1 flag adds nothing and
 #: makes coefficients harder to read.
 CONTINUOUS_FEATURES = [
-    "age", "bmi", "cycle_length_days", "exercise_hours_per_week",
-    "sleep_hours", "stress_level", "activity_score",
-    "androgenic_symptom_count", "metabolic_load", "cycle_deviation",
+    "age",
+    "bmi",
+    "cycle_length_days",
+    "exercise_hours_per_week",
+    "sleep_hours",
+    "stress_level",
+    "activity_score",
+    "androgenic_symptom_count",
+    "metabolic_load",
+    "cycle_deviation",
     "lifestyle_score",
 ]
 BINARY_COLUMNS = [f for f in FEATURE_ORDER if f not in CONTINUOUS_FEATURES]
@@ -178,7 +185,9 @@ def candidate_models(scale_pos_weight: float) -> dict[str, Pipeline]:
     }
 
 
-def evaluate(y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray) -> dict[str, float]:
+def evaluate(
+    y_true: np.ndarray, y_pred: np.ndarray, y_proba: np.ndarray
+) -> dict[str, float]:
     """Every metric the brief asks for, plus two that matter in practice.
 
     ``pr_auc`` is more informative than ROC-AUC under class imbalance, and
@@ -209,7 +218,9 @@ def permutation_importance_summary(
     from sklearn.inspection import permutation_importance
 
     result = permutation_importance(
-        pipeline, X, y,
+        pipeline,
+        X,
+        y,
         n_repeats=n_repeats,
         random_state=RANDOM_STATE,
         scoring="roc_auc",
@@ -217,7 +228,7 @@ def permutation_importance_summary(
     )
     scores = {
         feature: round(float(mean), 5)
-        for feature, mean in zip(X.columns, result.importances_mean)
+        for feature, mean in zip(X.columns, result.importances_mean, strict=True)
     }
     return dict(sorted(scores.items(), key=lambda kv: kv[1], reverse=True))
 
@@ -245,21 +256,27 @@ def _background_sample(
     return sample.round(4).to_dict(orient="records")
 
 
-def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = False) -> dict[str, Any]:
+def train(
+    rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = False
+) -> dict[str, Any]:
     """Run the full pipeline and write the artifact. Returns the report dict."""
     started = time.perf_counter()
     ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 
     # ---------------------------------------------------------- 1. load ----
     bundle = load_dataset(force_synthetic=force_synthetic, n=rows, seed=seed)
-    print(f"[1/9] dataset: {bundle.source} | rows={bundle.n_rows} "
-          f"| positive_rate={bundle.positive_rate:.3f}")
+    print(
+        f"[1/9] dataset: {bundle.source} | rows={bundle.n_rows} "
+        f"| positive_rate={bundle.positive_rate:.3f}"
+    )
 
     # ------------------------------------------------------- 2. engineer ---
     X = engineer_frame(bundle.frame)
     y = bundle.frame[TARGET_COLUMN].astype(int).to_numpy()
-    print(f"[2/9] engineered {X.shape[1]} features "
-          f"({int(X.isna().sum().sum())} missing cells pending imputation)")
+    print(
+        f"[2/9] engineered {X.shape[1]} features "
+        f"({int(X.isna().sum().sum())} missing cells pending imputation)"
+    )
 
     # ----------------------------------------------------------- 3. split --
     X_train, X_test, y_train, y_test = train_test_split(
@@ -276,15 +293,21 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
 
     comparison: dict[str, dict[str, float]] = {}
     for name, pipeline in models.items():
-        auc_scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring="roc_auc", n_jobs=1)
-        f1_scores = cross_val_score(pipeline, X_train, y_train, cv=cv, scoring="f1", n_jobs=1)
+        auc_scores = cross_val_score(
+            pipeline, X_train, y_train, cv=cv, scoring="roc_auc", n_jobs=1
+        )
+        f1_scores = cross_val_score(
+            pipeline, X_train, y_train, cv=cv, scoring="f1", n_jobs=1
+        )
         comparison[name] = {
             "cv_roc_auc_mean": round(float(auc_scores.mean()), 4),
             "cv_roc_auc_std": round(float(auc_scores.std()), 4),
             "cv_f1_mean": round(float(f1_scores.mean()), 4),
         }
-        print(f"[5/9] {name:<22} cv_roc_auc={auc_scores.mean():.4f} "
-              f"(±{auc_scores.std():.4f})  cv_f1={f1_scores.mean():.4f}")
+        print(
+            f"[5/9] {name:<22} cv_roc_auc={auc_scores.mean():.4f} "
+            f"(±{auc_scores.std():.4f})  cv_f1={f1_scores.mean():.4f}"
+        )
 
     # ---------------------------------------------------------- 6. select --
     best_name = max(comparison, key=lambda k: comparison[k]["cv_roc_auc_mean"])
@@ -303,8 +326,10 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
         cv=3,
     )
     calibrated.fit(X_train, y_train)
-    print(f"[7/9] calibrated probabilities "
-          f"(brier before={brier_score_loss(y_test, uncalibrated_proba):.4f})")
+    print(
+        f"[7/9] calibrated probabilities "
+        f"(brier before={brier_score_loss(y_test, uncalibrated_proba):.4f})"
+    )
 
     # -------------------------------------------------------- 8. evaluate --
     y_proba = calibrated.predict_proba(X_test)[:, 1]
@@ -316,12 +341,14 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
     step = max(1, len(fpr) // 100)
     roc_points = [
         {"fpr": round(float(f), 4), "tpr": round(float(t), 4)}
-        for f, t in zip(fpr[::step], tpr[::step])
+        for f, t in zip(fpr[::step], tpr[::step], strict=False)
     ]
 
-    print(f"[8/9] holdout: acc={metrics['accuracy']:.4f} prec={metrics['precision']:.4f} "
-          f"rec={metrics['recall']:.4f} f1={metrics['f1']:.4f} "
-          f"auc={metrics['roc_auc']:.4f} brier={metrics['brier_score']:.4f}")
+    print(
+        f"[8/9] holdout: acc={metrics['accuracy']:.4f} prec={metrics['precision']:.4f} "
+        f"rec={metrics['recall']:.4f} f1={metrics['f1']:.4f} "
+        f"auc={metrics['roc_auc']:.4f} brier={metrics['brier_score']:.4f}"
+    )
 
     importances = permutation_importance_summary(calibrated, X_test, y_test)
 
@@ -336,7 +363,7 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
         )
 
     # --------------------------------------------------------- 9. persist --
-    trained_at = datetime.now(timezone.utc).isoformat()
+    trained_at = datetime.now(UTC).isoformat()
     artifact = {
         "model": calibrated,
         "model_name": best_name,
@@ -350,8 +377,8 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
         "roc_curve": roc_points,
         "comparison": comparison,
         "permutation_importance": importances,
-        "n_training_samples": int(len(X_train)),
-        "n_test_samples": int(len(X_test)),
+        "n_training_samples": len(X_train),
+        "n_test_samples": len(X_test),
         "positive_rate": round(float(y.mean()), 4),
         "data_source": bundle.source,
         "data_description": bundle.description,
@@ -377,7 +404,8 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
     # The report is a human-readable companion to the artifact; the model
     # object and the bulky background sample stay in the joblib file only.
     report = {
-        k: v for k, v in artifact.items()
+        k: v
+        for k, v in artifact.items()
         if k not in {"model", "background_sample", "roc_curve"}
     }
     report["roc_curve_points"] = len(roc_points)
@@ -386,18 +414,27 @@ def train(rows: int = 6000, seed: int = RANDOM_STATE, force_synthetic: bool = Fa
     report["artifact_size_kb"] = round(model_path.stat().st_size / 1024, 1)
     (ARTIFACT_DIR / METRICS_FILENAME).write_text(json.dumps(report, indent=2))
 
-    print(f"[9/9] saved {model_path} ({report['artifact_size_kb']} KB) "
-          f"in {report['duration_seconds']}s")
+    print(
+        f"[9/9] saved {model_path} ({report['artifact_size_kb']} KB) "
+        f"in {report['duration_seconds']}s"
+    )
     return report
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Train the Oviora PCOS risk model.")
-    parser.add_argument("--rows", type=int, default=6000,
-                        help="Synthetic cohort size (ignored when a real CSV exists).")
+    parser.add_argument(
+        "--rows",
+        type=int,
+        default=6000,
+        help="Synthetic cohort size (ignored when a real CSV exists).",
+    )
     parser.add_argument("--seed", type=int, default=RANDOM_STATE)
-    parser.add_argument("--force-synthetic", action="store_true",
-                        help="Ignore ml/data/pcos_dataset.csv even if present.")
+    parser.add_argument(
+        "--force-synthetic",
+        action="store_true",
+        help="Ignore ml/data/pcos_dataset.csv even if present.",
+    )
     args = parser.parse_args()
     train(rows=args.rows, seed=args.seed, force_synthetic=args.force_synthetic)
 

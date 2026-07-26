@@ -134,7 +134,11 @@ def chunk_document(document: LoadedDocument) -> list[DocumentChunk]:
         for index, match in enumerate(headings):
             heading = match.group(2).strip()
             start = match.end()
-            end = headings[index + 1].start() if index + 1 < len(headings) else len(document.body)
+            end = (
+                headings[index + 1].start()
+                if index + 1 < len(headings)
+                else len(document.body)
+            )
             body = document.body[start:end].strip()
             if body:
                 sections.append((heading, body))
@@ -194,6 +198,6 @@ def load_knowledge_base(directory: Path | None = None) -> list[DocumentChunk]:
 
     logger.info(
         "knowledge base loaded",
-        extra={"documents": len(list(base.glob('*.md'))), "chunks": len(all_chunks)},
+        extra={"documents": len(list(base.glob("*.md"))), "chunks": len(all_chunks)},
     )
     return all_chunks

@@ -26,6 +26,7 @@ import hashlib
 import math
 import re
 from collections import Counter
+from itertools import pairwise
 
 from app.ai.llm.base import EmbeddingProvider
 
@@ -37,14 +38,105 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
 #: Function words carry no retrieval signal and would dominate the hash space.
 STOPWORDS: frozenset[str] = frozenset(
-    """
-    a an the and or but if then than that this these those of to in on at by
-    for with about into over after is are was were be been being do does did
-    have has had having i you he she it we they me him her them my your his
-    its our their as from not no so such can could should would may might will
-    just very more most some any each other there here what which who whom how
-    when where why all both few own same too s t don now
-    """.split()
+    [
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "but",
+        "if",
+        "then",
+        "than",
+        "that",
+        "this",
+        "these",
+        "those",
+        "of",
+        "to",
+        "in",
+        "on",
+        "at",
+        "by",
+        "for",
+        "with",
+        "about",
+        "into",
+        "over",
+        "after",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "do",
+        "does",
+        "did",
+        "have",
+        "has",
+        "had",
+        "having",
+        "i",
+        "you",
+        "he",
+        "she",
+        "it",
+        "we",
+        "they",
+        "me",
+        "him",
+        "her",
+        "them",
+        "my",
+        "your",
+        "his",
+        "its",
+        "our",
+        "their",
+        "as",
+        "from",
+        "not",
+        "no",
+        "so",
+        "such",
+        "can",
+        "could",
+        "should",
+        "would",
+        "may",
+        "might",
+        "will",
+        "just",
+        "very",
+        "more",
+        "most",
+        "some",
+        "any",
+        "each",
+        "other",
+        "there",
+        "here",
+        "what",
+        "which",
+        "who",
+        "whom",
+        "how",
+        "when",
+        "where",
+        "why",
+        "all",
+        "both",
+        "few",
+        "own",
+        "same",
+        "too",
+        "s",
+        "t",
+        "don",
+        "now",
+    ]
 )
 
 
@@ -98,7 +190,7 @@ class LocalHashEmbedder(EmbeddingProvider):
 
         # Bigrams capture short phrases ("insulin resistance") that unigrams
         # alone would scatter across unrelated documents.
-        bigrams = [f"{a}_{b}" for a, b in zip(tokens, tokens[1:])]
+        bigrams = [f"{a}_{b}" for a, b in pairwise(tokens)]
         counts = Counter(tokens)
         counts.update(bigrams)
 
@@ -121,7 +213,7 @@ class LocalHashEmbedder(EmbeddingProvider):
         return self._vectorise(text)
 
     # Chroma calls embedding functions synchronously, so expose a sync path too.
-    def __call__(self, input: list[str]) -> list[list[float]]:  # noqa: A002
+    def __call__(self, input: list[str]) -> list[list[float]]:
         return [self._vectorise(text) for text in input]
 
 
@@ -129,7 +221,7 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
     """Cosine similarity for two equal-length vectors, clamped to [-1, 1]."""
     if len(a) != len(b):
         raise ValueError("Vectors must have the same dimensionality.")
-    dot = sum(x * y for x, y in zip(a, b))
+    dot = sum(x * y for x, y in zip(a, b, strict=True))
     norm_a = math.sqrt(sum(x * x for x in a))
     norm_b = math.sqrt(sum(y * y for y in b))
     if norm_a == 0 or norm_b == 0:

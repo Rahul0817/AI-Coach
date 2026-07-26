@@ -52,7 +52,9 @@ class ExtractedFacts:
 # pattern that would read "22" as something else.
 _AGE_PATTERNS = [
     re.compile(r"\bi(?:'m| am)\s+(\d{1,3})\s*(?:years?\s*old|yo|yrs?)\b", re.I),
-    re.compile(r"\bi(?:'m| am)\s+(\d{1,3})\b(?!\s*(?:kg|kgs|cm|lbs|pounds|%|days?))", re.I),
+    re.compile(
+        r"\bi(?:'m| am)\s+(\d{1,3})\b(?!\s*(?:kg|kgs|cm|lbs|pounds|%|days?))", re.I
+    ),
     re.compile(r"\bmy age is\s+(\d{1,3})\b", re.I),
     re.compile(r"\baged?\s+(\d{1,3})\b", re.I),
     re.compile(r"\b(\d{1,3})\s*(?:years?\s*old|yo)\b", re.I),
@@ -60,7 +62,9 @@ _AGE_PATTERNS = [
 
 _WEIGHT_PATTERNS = [
     re.compile(r"\bi weigh\s+(\d{2,3}(?:\.\d)?)\s*(kg|kgs|kilos?|lbs?|pounds?)?\b", re.I),
-    re.compile(r"\bmy weight is\s+(\d{2,3}(?:\.\d)?)\s*(kg|kgs|kilos?|lbs?|pounds?)?\b", re.I),
+    re.compile(
+        r"\bmy weight is\s+(\d{2,3}(?:\.\d)?)\s*(kg|kgs|kilos?|lbs?|pounds?)?\b", re.I
+    ),
     re.compile(r"\b(\d{2,3}(?:\.\d)?)\s*(kg|kgs|kilos?|lbs?|pounds?)\b", re.I),
 ]
 
@@ -73,7 +77,9 @@ _HEIGHT_PATTERNS = [
 ]
 
 _CYCLE_PATTERNS = [
-    re.compile(r"\bmy cycles? (?:are|is|last)\s+(?:about\s+|around\s+)?(\d{2,3})\s*days?\b", re.I),
+    re.compile(
+        r"\bmy cycles? (?:are|is|last)\s+(?:about\s+|around\s+)?(\d{2,3})\s*days?\b", re.I
+    ),
     re.compile(r"\b(\d{2,3})[- ]day cycles?\b", re.I),
     re.compile(r"\bcycle length (?:is|of)\s+(\d{2,3})\b", re.I),
 ]
@@ -83,9 +89,7 @@ _CYCLE_PATTERNS = [
 # sentence rather than requiring adjacency. ``[^.!?]*`` keeps it inside one
 # clause so it cannot reach across into an unrelated sentence.
 _DIET_PATTERNS = {
-    "vegan": re.compile(
-        r"\b(?:i(?:'m| am)\b[^.!?]*?\bvegan\b|vegan diet)", re.I
-    ),
+    "vegan": re.compile(r"\b(?:i(?:'m| am)\b[^.!?]*?\bvegan\b|vegan diet)", re.I),
     "eggetarian": re.compile(
         r"\b(?:i(?:'m| am)\b[^.!?]*?\beggetarian\b|eggetarian diet|\beggetarian\b)", re.I
     ),
@@ -190,8 +194,11 @@ def extract_facts(text: str) -> ExtractedFacts:
             if len(match.groups()) == 2 and match.group(2) is not None:
                 feet, inches = int(match.group(1)), int(match.group(2))
                 if 3 <= feet <= 7 and 0 <= inches <= 11:
-                    record("height_cm", round(feet * 30.48 + inches * 2.54, 1),
-                           "height_imperial")
+                    record(
+                        "height_cm",
+                        round(feet * 30.48 + inches * 2.54, 1),
+                        "height_imperial",
+                    )
                     break
             else:
                 centimetres = float(match.group(1))

@@ -101,8 +101,9 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
     #: Path fragments billed against the expensive-route budget.
     AI_PATH_MARKERS = ("/chat", "/voice", "/vision", "/reports/analyze", "/predict")
     #: Never rate limited — these must stay reachable for orchestrators.
-    EXEMPT_PATHS = frozenset({"/health", "/health/live", "/health/ready", "/docs",
-                              "/openapi.json", "/redoc"})
+    EXEMPT_PATHS = frozenset(
+        {"/health", "/health/live", "/health/ready", "/docs", "/openapi.json", "/redoc"}
+    )
 
     async def dispatch(
         self, request: Request, call_next: RequestResponseEndpoint
@@ -161,8 +162,10 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             try:
                 payload = decode_token(auth[7:], expected_type="access")
                 return f"user:{payload['sub']}"
-            except Exception:
-                pass  # Unauthenticated/invalid — fall through to IP keying.
+            except Exception:  # noqa: S110
+                # Unauthenticated or invalid token — fall through to IP keying.
+                # This is the normal path for anonymous traffic, not an error.
+                pass
 
         # X-Forwarded-For is only trustworthy behind our own proxy, and we take
         # the left-most entry, which the edge proxy sets.

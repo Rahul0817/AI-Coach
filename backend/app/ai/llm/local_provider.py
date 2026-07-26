@@ -93,9 +93,7 @@ class LocalRetrievalProvider(LLMProvider):
     ) -> LLMResponse:
         system_text = "\n\n".join(m.content for m in messages if m.role == "system")
         history = [m for m in messages if m.role != "system"]
-        query = next(
-            (m.content for m in reversed(history) if m.role == "user"), ""
-        )
+        query = next((m.content for m in reversed(history) if m.role == "user"), "")
 
         answer = self._compose(system_text, query, history)
         return LLMResponse(
@@ -128,9 +126,7 @@ class LocalRetrievalProvider(LLMProvider):
         return True  # No external dependency, so always available.
 
     # -------------------------------------------------------------- internals
-    def _compose(
-        self, system_text: str, query: str, history: list[LLMMessage]
-    ) -> str:
+    def _compose(self, system_text: str, query: str, history: list[LLMMessage]) -> str:
         persona = self._extract(PERSONA_RE, system_text, "persona")
         profile = self._extract(PROFILE_RE, system_text, "profile")
         blocks = self._parse_sources(system_text)
@@ -195,7 +191,7 @@ class LocalRetrievalProvider(LLMProvider):
 
         k1, b = 1.5, 0.75
         scored: list[ScoredSentence] = []
-        for (text, block), tokens in zip(candidates, tokenised):
+        for (text, block), tokens in zip(candidates, tokenised, strict=True):
             counts = Counter(tokens)
             length = len(tokens) or 1
             score = 0.0
@@ -273,9 +269,7 @@ class LocalRetrievalProvider(LLMProvider):
             parts.append("")
 
         distinct_sources = sorted({b["source"] for b in blocks})
-        parts.append(
-            "**Sources consulted:** " + ", ".join(distinct_sources)
-        )
+        parts.append("**Sources consulted:** " + ", ".join(distinct_sources))
         parts.append("")
         parts.append(
             f"*Answered by the {role} using retrieved guidance. This "

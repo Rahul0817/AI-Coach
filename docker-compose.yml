@@ -1,0 +1,134 @@
+# =============================================================================
+# Oviora AI — local development stack
+#
+#   docker compose up --build
+#
+#   Frontend  http://localhost:3000
+#   API docs  http://localhost:8000/docs
+#
+# `depends_on: condition: service_healthy` matters here. Without it the API
+# starts before Postgres is accepting connections, fails its first queries, and
+# the whole stack looks broken on a fresh clone.
+# =============================================================================
+
+name: oviora
+
+services:
+  # --------------------------------------------------------------- database --
+  postgres:
+    image: postgres:16-alpine
+    container_name: oviora-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-oviora}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-oviora_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-oviora}
+      # Faster than the default and safe for a development volume.
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-oviora} -d ${POSTGRES_DB:-oviora}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [oviora-net]
+
+  # ------------------------------------------------------------------ cache --
+  redis:
+    image: redis:7-alpine
+    container_name: oviora-redis
+    restart: unless-stopped
+    # Rate-limit counters and chat working memory are both reconstructible, so
+    # persistence is disabled and memory is capped with LRU eviction.
+    command: >
+      redis-server
+      --save ""
+      --appendonly no
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [oviora-net]
+
+  # ---------------------------------------------------------------- backend --
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: oviora-api
+    restart: unless-stopped
+    env_file: [.env]
+    environment:
+      # Service names resolve over the compose network, overriding any
+      # localhost values in .env.
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      CHROMA_PERSIST_DIR: /app/chroma_store
+      LOCAL_UPLOAD_DIR: /app/uploads
+      BACKEND_CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    volumes:
+      # Named volumes so the vector index, uploads and the trained model
+      # survive a container rebuild.
+      - chroma_data:/app/chroma_store
+      - upload_data:/app/uploads
+      - model_data:/app/ml/artifacts
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    networks: [oviora-net]
+
+  # ------------------------------------------------------- one-shot ML train --
+  # Trains the risk model into the shared volume, then exits. Run explicitly:
+  #     docker compose run --rm trainer
+  # It is not part of `up` because training takes ~30s and the API degrades
+  # gracefully without a model rather than failing to start.
+  trainer:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: oviora-trainer
+    profiles: [tools]
+    command: ["python", "-m", "ml.train"]
+    volumes:
+      - model_data:/app/ml/artifacts
+    networks: [oviora-net]
+
+  # --------------------------------------------------------------- frontend --
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    container_name: oviora-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+    ports:
+      - "3000:3000"
+    depends_on: [api]
+    networks: [oviora-net]
+
+volumes:
+  postgres_data:
+  chroma_data:
+  upload_data:
+  model_data:
+
+networks:
+  oviora-net:
+    driver: bridge

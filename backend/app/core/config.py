@@ -54,7 +54,9 @@ class Settings(BaseSettings):
 
     # ------------------------------------------------------------- database
     postgres_user: str = "oviora"
-    postgres_password: str = "oviora_dev_password"
+    # The documented local development default, not a secret. Production
+    # values always come from the environment.
+    postgres_password: str = "oviora_dev_password"  # noqa: S105
     postgres_db: str = "oviora"
     postgres_host: str = "localhost"
     postgres_port: int = 5432
@@ -126,7 +128,7 @@ class Settings(BaseSettings):
         return value
 
     @model_validator(mode="after")
-    def _guard_production(self) -> "Settings":
+    def _guard_production(self) -> Settings:
         """Refuse to boot a production process with development defaults.
 
         The most common way a student project becomes a security incident is
@@ -157,8 +159,21 @@ class Settings(BaseSettings):
 
     @property
     def sync_sqlalchemy_uri(self) -> str:
-        """Synchronous URI — Alembic migrations run outside the event loop."""
-        return self.sqlalchemy_uri.replace("+asyncpg", "+psycopg2")
+        """Synchronous URI — Alembic's migration context is not async-aware.
+
+        Every async driver has to be mapped, not just asyncpg: pointing Alembic
+        at an ``aiosqlite`` URL fails with a confusing ``MissingGreenlet``
+        rather than a clear "wrong driver" error.
+        """
+        uri = self.sqlalchemy_uri
+        for async_driver, sync_driver in (
+            ("+asyncpg", "+psycopg2"),
+            ("+aiosqlite", ""),
+            ("+aiomysql", "+pymysql"),
+        ):
+            if async_driver in uri:
+                return uri.replace(async_driver, sync_driver)
+        return uri
 
     @property
     def redis_uri(self) -> str:

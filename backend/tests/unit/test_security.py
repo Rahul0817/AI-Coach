@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import time
 from datetime import timedelta
 
 import pytest
@@ -14,9 +13,9 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     decode_token,
+    generate_reset_token,
     hash_password,
     hash_reset_token,
-    generate_reset_token,
     token_expiry_seconds,
     verify_password,
 )
@@ -101,8 +100,8 @@ class TestTokens:
 
     def test_expiry_seconds_never_negative(self) -> None:
         expired = _create_token("u", "access", timedelta(seconds=-60))
-        payload_bytes = decode_token.__wrapped__ if hasattr(decode_token, "__wrapped__") else None
-        # Decode without validation to reach the expired payload.
+        # Read the claims without validating, since the token is expired by
+        # design and decode_token would (correctly) reject it.
         import jose.jwt as jose_jwt
 
         from app.core.config import settings
