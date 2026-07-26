@@ -45,14 +45,14 @@
     "fast_food",
     "family_history"
   ],
-  "trained_at": "2026-07-26T00:38:39.084471+00:00",
+  "trained_at": "2026-07-26T18:15:04.462096+00:00",
   "metrics": {
     "accuracy": 0.8967,
     "precision": 0.8659,
     "recall": 0.8031,
     "f1": 0.8333,
     "roc_auc": 0.922,
-    "pr_auc": 0.8708,
+    "pr_auc": 0.8707,
     "brier_score": 0.0824
   },
   "confusion_matrix": [
@@ -79,50 +79,50 @@
       "test_brier_score": 0.0927
     },
     "random_forest": {
-      "cv_roc_auc_mean": 0.924,
-      "cv_roc_auc_std": 0.0106,
-      "cv_f1_mean": 0.8363,
-      "test_accuracy": 0.8933,
-      "test_precision": 0.8468,
+      "cv_roc_auc_mean": 0.9241,
+      "cv_roc_auc_std": 0.0102,
+      "cv_f1_mean": 0.8362,
+      "test_accuracy": 0.8908,
+      "test_precision": 0.84,
       "test_recall": 0.8161,
-      "test_f1": 0.8311,
-      "test_roc_auc": 0.923,
-      "test_pr_auc": 0.8717,
-      "test_brier_score": 0.0877
+      "test_f1": 0.8279,
+      "test_roc_auc": 0.9228,
+      "test_pr_auc": 0.8693,
+      "test_brier_score": 0.0878
     },
     "xgboost": {
-      "cv_roc_auc_mean": 0.921,
-      "cv_roc_auc_std": 0.0085,
-      "cv_f1_mean": 0.8317,
-      "test_accuracy": 0.8817,
-      "test_precision": 0.8194,
-      "test_recall": 0.8109,
-      "test_f1": 0.8151,
-      "test_roc_auc": 0.9109,
-      "test_pr_auc": 0.8743,
-      "test_brier_score": 0.0924
+      "cv_roc_auc_mean": 0.9213,
+      "cv_roc_auc_std": 0.0081,
+      "cv_f1_mean": 0.8336,
+      "test_accuracy": 0.8808,
+      "test_precision": 0.8156,
+      "test_recall": 0.8135,
+      "test_f1": 0.8145,
+      "test_roc_auc": 0.9112,
+      "test_pr_auc": 0.8723,
+      "test_brier_score": 0.0929
     }
   },
   "permutation_importance": {
-    "androgenic_symptom_count": 0.05426,
-    "cycle_irregularity": 0.05141,
+    "androgenic_symptom_count": 0.05423,
+    "cycle_irregularity": 0.0514,
     "metabolic_load": 0.01507,
     "weight_gain": 0.0048,
     "fast_food": 0.00432,
-    "hair_growth": 0.00376,
-    "family_history": 0.00329,
-    "bmi": 0.00287,
+    "hair_growth": 0.00375,
+    "family_history": 0.0033,
+    "bmi": 0.00286,
     "stress_level": 0.00194,
-    "sleep_hours": 0.001,
+    "sleep_hours": 0.00099,
     "exercise_hours_per_week": 0.00054,
     "cycle_deviation": 0.00036,
     "skin_darkening": 0.00035,
-    "pimples": 0.00022,
-    "cycle_length_days": 9e-05,
+    "pimples": 0.00023,
+    "cycle_length_days": 8e-05,
     "age": 5e-05,
-    "hair_loss": -2e-05,
-    "activity_score": -0.00051,
-    "lifestyle_score": -0.00085
+    "hair_loss": -3e-05,
+    "activity_score": -0.00056,
+    "lifestyle_score": -0.00086
   },
   "n_training_samples": 4800,
   "n_test_samples": 1200,
@@ -155,7 +155,7 @@
     "lifestyle_score": 0.6162
   },
   "roc_curve_points": 142,
-  "duration_seconds": 27.98,
+  "duration_seconds": 36.15,
   "artifact_path": "/home/user/AI-Coach/backend/ml/artifacts/pcos_risk_model.joblib",
   "artifact_size_kb": 13.4
 }

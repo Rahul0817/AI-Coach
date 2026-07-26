@@ -67,6 +67,29 @@ class Base(DeclarativeBase):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
+def _enable_sqlite_foreign_keys(target_engine: AsyncEngine) -> None:
+    """Turn on foreign-key enforcement for SQLite connections.
+
+    SQLite ships with foreign keys **disabled** and requires the pragma on
+    every connection. Postgres enforces them always, so without this the test
+    suite runs against a database with materially weaker guarantees than
+    production — and every ``ondelete="CASCADE"`` in the schema goes
+    unverified.
+
+    That is not academic: the cascade is how the right-to-erasure requirement
+    is implemented. A test asserting "deleting a user removes their health
+    data" passes vacuously on a database that ignores the constraint, giving
+    false confidence about a compliance guarantee.
+    """
+    from sqlalchemy import event
+
+    @event.listens_for(target_engine.sync_engine, "connect")
+    def _set_pragma(dbapi_connection, _connection_record):  # type: ignore[no-untyped-def]
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+
 def create_engine(uri: str | None = None) -> AsyncEngine:
     """Build the engine with a pool sized for a typical container.
 
@@ -75,7 +98,9 @@ def create_engine(uri: str | None = None) -> AsyncEngine:
     """
     target = uri or settings.sqlalchemy_uri
     if target.startswith("sqlite"):
-        return create_async_engine(target, echo=False, future=True)
+        sqlite_engine = create_async_engine(target, echo=False, future=True)
+        _enable_sqlite_foreign_keys(sqlite_engine)
+        return sqlite_engine
     return create_async_engine(
         target,
         echo=False,

@@ -244,8 +244,14 @@ def engineer_features(raw: dict) -> dict[str, float]:
     bmi_component = min(1.0, max(0.0, (out["bmi"] - 18.5) / 21.5))  # 18.5→40
     diet_component = out["fast_food"]
     inactivity = 1.0 - (out["activity_score"] / 4.0)
-    out["metabolic_load"] = round(
-        0.55 * bmi_component + 0.20 * diet_component + 0.25 * inactivity, 4
+    # Deliberately NOT rounded. Rounding here diverges from the vectorised
+    # twin below: Python floats and numpy float64 land on opposite sides of a
+    # half-way value often enough that ~0.5% of rows differ in the fourth
+    # decimal. That is training/serving skew, and it is caught by
+    # tests/unit/test_features.py::test_scalar_and_vectorised_agree.
+    # Precision is free here; rounding is a display concern, not a model one.
+    out["metabolic_load"] = (
+        0.55 * bmi_component + 0.20 * diet_component + 0.25 * inactivity
     )
 
     # --- absolute deviation from a reference cycle ---
@@ -257,9 +263,8 @@ def engineer_features(raw: dict) -> dict[str, float]:
     sleep_component = min(1.0, out["sleep_hours"] / 8.0)
     exercise_component = min(1.0, out["exercise_hours_per_week"] / 5.0)
     stress_component = 1.0 - ((out["stress_level"] - 1) / 4.0)
-    out["lifestyle_score"] = round(
-        0.35 * sleep_component + 0.35 * exercise_component + 0.30 * stress_component,
-        4,
+    out["lifestyle_score"] = (
+        0.35 * sleep_component + 0.35 * exercise_component + 0.30 * stress_component
     )
 
     return {name: out[name] for name in FEATURE_ORDER}
@@ -301,7 +306,7 @@ def engineer_frame(frame):  # type: ignore[no-untyped-def]
     inactivity = 1.0 - (out["activity_score"] / 4.0)
     out["metabolic_load"] = (
         0.55 * bmi_component + 0.20 * diet_component + 0.25 * inactivity
-    ).round(4)
+    )
 
     out["cycle_deviation"] = (
         (out["cycle_length_days"] - REFERENCE_CYCLE_LENGTH).abs()
@@ -312,7 +317,7 @@ def engineer_frame(frame):  # type: ignore[no-untyped-def]
     stress_component = 1.0 - ((out["stress_level"] - 1) / 4.0)
     out["lifestyle_score"] = (
         0.35 * sleep_component + 0.35 * exercise_component + 0.30 * stress_component
-    ).round(4)
+    )
 
     # NaNs are preserved deliberately — the sklearn pipeline's imputer is the
     # one place missing values get filled, so the same rule applies at
