@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import secrets
 import tempfile
 import uuid
 from collections.abc import AsyncIterator, Iterator
@@ -30,7 +31,12 @@ import pytest
 # settings are read at import time and cached.
 os.environ.setdefault("ENVIRONMENT", "development")
 os.environ.setdefault(
-    "SECRET_KEY", "test-secret-key-not-used-outside-the-suite-0123456789"
+    # Generated per run rather than written as a literal. A hard-coded
+    # high-entropy string is indistinguishable from a leaked key to a secret
+    # scanner, and generating it also guarantees no test can quietly come to
+    # depend on a fixed signing key.
+    "SECRET_KEY",
+    secrets.token_urlsafe(48),
 )
 os.environ.setdefault("LLM_PROVIDER", "local")
 os.environ.setdefault("EMBEDDING_PROVIDER", "local")

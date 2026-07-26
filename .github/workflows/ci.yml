@@ -70,7 +70,7 @@ jobs:
           POSTGRES_DB: oviora_test
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U oviora"
+          --health-cmd "pg_isready -U oviora -d oviora_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -228,8 +228,12 @@ jobs:
       - name: Smoke-test the image
         # Proves the image starts and serves, which a build alone does not.
         run: |
+          # Generated at runtime rather than written into the file. A literal
+          # high-entropy string here is indistinguishable from a real leaked
+          # key to a secret scanner, and a scanner people learn to ignore is
+          # worse than no scanner.
           docker run -d --name oviora-smoke -p 8000:8000 \
-            -e SECRET_KEY=ci-smoke-secret-0123456789abcdefghijklmnop \
+            -e SECRET_KEY="$(openssl rand -hex 32)" \
             -e ENVIRONMENT=development \
             -e LLM_PROVIDER=local \
             oviora-api:ci
