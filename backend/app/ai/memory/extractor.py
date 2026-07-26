@@ -117,9 +117,13 @@ _GOAL_PATTERNS = [
     re.compile(r"\bi(?:'m| am) trying to\s+(.{4,80}?)(?:[.!?]|$)", re.I),
 ]
 
+# The "allergic to …" phrase is matched wherever it appears rather than only
+# straight after "I am", because people write "I'm 23 and allergic to peanuts".
+# Attribution to someone else ("my mother is allergic to nuts") is rejected by
+# the negation guard below, which covers third-person subjects.
 _ALLERGY_PATTERN = re.compile(
-    r"\bi(?:'m| am)?\s*(?:allergic to|can't eat|cannot eat|intolerant to)\s+"
-    r"([a-z ,and]{3,60}?)(?:[.!?]|$)",
+    r"\b(?:allergic to|can'?t eat|cannot eat|intolerant to|"
+    r"allergy to|allergies? to)\s+([a-z ,and]{3,60}?)(?:[.!?]|$)",
     re.I,
 )
 

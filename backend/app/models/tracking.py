@@ -25,10 +25,10 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.types import GUID
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import (
     HabitFrequency,
@@ -78,7 +78,7 @@ class HabitEntry(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     habit_id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+        GUID,
         ForeignKey("habits.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

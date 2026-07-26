@@ -44,9 +44,23 @@ NAMING_CONVENTION = {
 
 
 class Base(DeclarativeBase):
-    """Declarative base shared by every ORM model."""
+    """Declarative base shared by every ORM model.
+
+    ``eager_defaults`` is essential here, not an optimisation. Columns with a
+    server-side default or ``onupdate`` — ``created_at`` and ``updated_at`` on
+    every table — are *expired* by SQLAlchemy after an INSERT or UPDATE, since
+    only the database knows their new value. Reading one then triggers an
+    implicit refresh, and implicit IO is illegal under asyncio: it raises
+    ``MissingGreenlet``.
+
+    That would break every PATCH/PUT endpoint that returns the updated row.
+    With ``eager_defaults`` SQLAlchemy fetches those values inline via
+    RETURNING (supported by both Postgres and SQLite), so the attributes are
+    already populated and no lazy refresh is ever attempted.
+    """
 
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+    __mapper_args__ = {"eager_defaults": True}
 
     def to_dict(self) -> dict[str, Any]:
         """Shallow column dump — handy in tests and debug endpoints."""

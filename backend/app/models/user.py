@@ -23,10 +23,10 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.types import GUID, JSONDict
 from app.models.base import TimestampMixin, UUIDPrimaryKeyMixin
 from app.models.enums import ActivityLevel, DiagnosisStatus, DietaryPreference
 
@@ -132,7 +132,7 @@ class Profile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="CASCADE"),
         unique=True,
         nullable=False,
@@ -159,13 +159,13 @@ class Profile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Free-form personalisation inputs surfaced to the agents.
     primary_goal: Mapped[str | None] = mapped_column(String(200), nullable=True)
     allergies: Mapped[list[str]] = mapped_column(
-        JSONB, default=list, nullable=False, server_default="[]"
+        JSONDict, default=list, nullable=False, server_default="[]"
     )
     medical_conditions: Mapped[list[str]] = mapped_column(
-        JSONB, default=list, nullable=False, server_default="[]"
+        JSONDict, default=list, nullable=False, server_default="[]"
     )
     medications: Mapped[list[str]] = mapped_column(
-        JSONB, default=list, nullable=False, server_default="[]"
+        JSONDict, default=list, nullable=False, server_default="[]"
     )
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
@@ -175,7 +175,7 @@ class Profile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     # Long-lived facts the memory layer extracted from conversation, e.g.
     # {"age": 22, "prefers": "vegetarian breakfasts"}.
     ai_memory: Mapped[dict] = mapped_column(
-        JSONB, default=dict, nullable=False, server_default="{}"
+        JSONDict, default=dict, nullable=False, server_default="{}"
     )
 
     user: Mapped["User"] = relationship(back_populates="profile")

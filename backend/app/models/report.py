@@ -6,10 +6,10 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Float, ForeignKey, Index, String, Text
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.types import GUID
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import BiomarkerFlag, ReportStatus
 
@@ -52,7 +52,7 @@ class Biomarker(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __table_args__ = (Index("ix_biomarker_report_name", "report_id", "name"),)
 
     report_id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+        GUID,
         ForeignKey("blood_reports.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

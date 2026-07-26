@@ -21,7 +21,11 @@ redis==5.2.1
 
 # ----------------------------------------------------------------- security
 passlib[bcrypt]==1.7.4
-bcrypt==4.2.1
+# Pinned below 4.1 deliberately. passlib 1.7.4 reads `bcrypt.__about__.__version__`
+# during backend detection, and bcrypt removed that attribute in 4.1. Hashing
+# still works — passlib traps the error — but it prints a full traceback on every
+# process start, which is noise that trains operators to ignore stack traces.
+bcrypt==4.0.1
 python-jose[cryptography]==3.3.0
 
 # ------------------------------------------------------------ ML / analytics

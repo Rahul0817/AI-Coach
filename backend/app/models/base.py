@@ -15,15 +15,16 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.models.types import GUID
 
 
 class UUIDPrimaryKeyMixin:
     """Adds a client-generatable UUID primary key."""
 
     id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid.uuid4,
     )
@@ -59,7 +60,7 @@ class UserOwnedMixin:
     """
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

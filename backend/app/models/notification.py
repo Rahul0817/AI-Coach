@@ -6,10 +6,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.types import JSONDict
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import NotificationType
 
@@ -48,7 +48,7 @@ class Notification(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     )
     #: Arbitrary payload for the frontend (chart ids, streak counts, …).
     payload: Mapped[dict] = mapped_column(
-        JSONB, default=dict, nullable=False, server_default="{}"
+        JSONDict, default=dict, nullable=False, server_default="{}"
     )
 
     user: Mapped["User"] = relationship(back_populates="notifications")

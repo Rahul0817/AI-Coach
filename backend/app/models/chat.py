@@ -19,10 +19,10 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.types import GUID, JSONDict
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import MessageRole
 
@@ -73,7 +73,7 @@ class Message(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     )
 
     conversation_id: Mapped[uuid.UUID] = mapped_column(
-        PGUUID(as_uuid=True),
+        GUID,
         ForeignKey("conversations.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -89,7 +89,7 @@ class Message(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     routing_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     #: [{"title": "...", "source": "...", "score": 0.82, "snippet": "..."}]
     sources: Mapped[list] = mapped_column(
-        JSONB, default=list, nullable=False, server_default="[]"
+        JSONDict, default=list, nullable=False, server_default="[]"
     )
     tokens_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
     latency_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)

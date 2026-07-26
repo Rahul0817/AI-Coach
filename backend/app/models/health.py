@@ -16,10 +16,10 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.types import JSONDict
 from app.models.base import TimestampMixin, UserOwnedMixin, UUIDPrimaryKeyMixin
 from app.models.enums import FlowIntensity, RiskBand
 
@@ -111,7 +111,7 @@ class Prediction(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     model_version: Mapped[str] = mapped_column(String(40), nullable=False)
     model_name: Mapped[str] = mapped_column(String(60), nullable=False)
 
-    features: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    features: Mapped[dict] = mapped_column(JSONDict, nullable=False)
     risk_score: Mapped[float] = mapped_column(Float, nullable=False)
     risk_band: Mapped[str] = mapped_column(
         String(12), default=RiskBand.LOW.value, nullable=False
@@ -121,7 +121,7 @@ class Prediction(Base, UUIDPrimaryKeyMixin, UserOwnedMixin, TimestampMixin):
     # [{"feature": "cycle_length_days", "value": 46, "shap": 0.18,
     #   "direction": "increases", "explanation": "..."}]
     explanation: Mapped[list] = mapped_column(
-        JSONB, default=list, nullable=False, server_default="[]"
+        JSONDict, default=list, nullable=False, server_default="[]"
     )
     summary: Mapped[str | None] = mapped_column(Text, nullable=True)
 
