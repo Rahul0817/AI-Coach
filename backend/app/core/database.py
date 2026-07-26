@@ -53,10 +53,17 @@ class Base(DeclarativeBase):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
-def create_engine() -> AsyncEngine:
-    """Build the engine with a pool sized for a typical container."""
+def create_engine(uri: str | None = None) -> AsyncEngine:
+    """Build the engine with a pool sized for a typical container.
+
+    SQLite (used by the test suite) rejects the pool arguments below, so they
+    are applied only for server-backed databases.
+    """
+    target = uri or settings.sqlalchemy_uri
+    if target.startswith("sqlite"):
+        return create_async_engine(target, echo=False, future=True)
     return create_async_engine(
-        settings.sqlalchemy_uri,
+        target,
         echo=False,
         future=True,
         pool_pre_ping=True,   # transparently drops connections killed by the DB
@@ -66,19 +73,48 @@ def create_engine() -> AsyncEngine:
     )
 
 
-engine: AsyncEngine = create_engine()
+# The engine is built lazily rather than at import time. Constructing it eagerly
+# would make `import app.core.database` fail on any machine without the asyncpg
+# driver installed — which breaks unit tests, tooling, and anything that merely
+# wants to import a model class. Nothing should pay for a database connection
+# it never uses.
+_engine: AsyncEngine | None = None
+_session_factory: async_sessionmaker[AsyncSession] | None = None
 
-SessionLocal = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False,
-)
+
+def get_engine() -> AsyncEngine:
+    """Return the process-wide engine, creating it on first use."""
+    global _engine
+    if _engine is None:
+        _engine = create_engine()
+    return _engine
+
+
+def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Return the process-wide session factory, creating it on first use."""
+    global _session_factory
+    if _session_factory is None:
+        _session_factory = async_sessionmaker(
+            bind=get_engine(),
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+        )
+    return _session_factory
+
+
+def configure_engine(uri: str) -> None:
+    """Point the process at a different database. Used by the test suite."""
+    global _engine, _session_factory
+    _engine = create_engine(uri)
+    _session_factory = async_sessionmaker(
+        bind=_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    )
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """FastAPI dependency yielding a request-scoped session."""
-    async with SessionLocal() as session:
+    async with get_session_factory()() as session:
         try:
             yield session
         except Exception:
@@ -98,12 +134,16 @@ async def init_models() -> None:
     # Importing the package registers every model on Base.metadata.
     import app.models  # noqa: F401
 
-    async with engine.begin() as conn:
+    async with get_engine().begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("database schema ensured")
 
 
 async def dispose_engine() -> None:
     """Close pooled connections on shutdown so containers exit cleanly."""
-    await engine.dispose()
-    logger.info("database engine disposed")
+    global _engine, _session_factory
+    if _engine is not None:
+        await _engine.dispose()
+        _engine = None
+        _session_factory = None
+        logger.info("database engine disposed")
