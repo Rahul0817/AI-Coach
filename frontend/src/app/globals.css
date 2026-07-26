@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens.
+ *
+ * Every colour the UI uses is declared here once, in both light and dark
+ * variants. Components reference the token, never a raw hex value, so toggling
+ * `.dark` on <html> re-themes the whole app with no per-component work.
+ */
+@layer base {
+  :root {
+    --background: 300 20% 99%;
+    --foreground: 270 20% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 270 20% 12%;
+
+    --primary: 271 81% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --blush: 330 81% 60%;
+
+    --muted: 270 20% 96%;
+    --muted-foreground: 270 8% 46%;
+
+    --border: 270 20% 91%;
+    --input: 270 20% 91%;
+    --ring: 271 81% 56%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 60% 40%;
+    --warning: 38 92% 50%;
+
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: 270 24% 8%;
+    --foreground: 270 12% 95%;
+
+    --card: 270 22% 12%;
+    --card-foreground: 270 12% 95%;
+
+    --primary: 271 76% 66%;
+    --primary-foreground: 270 24% 8%;
+
+    --blush: 330 76% 66%;
+
+    --muted: 270 18% 18%;
+    --muted-foreground: 270 10% 65%;
+
+    --border: 270 18% 20%;
+    --input: 270 18% 20%;
+    --ring: 271 76% 66%;
+
+    --destructive: 0 63% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 50% 48%;
+    --warning: 38 88% 58%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+
+  /* Respect the OS-level reduced-motion preference. Vestibular disorders are
+     real, and an app for a chronic condition should not be the one that
+     ignores an accessibility setting. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* Glassmorphism. The backdrop blur is the expensive part, so it is applied
+     to a small number of large surfaces rather than to every card. */
+  .glass {
+    @apply border border-white/40 bg-white/70 shadow-glass backdrop-blur-xl;
+  }
+
+  .dark .glass {
+    @apply border-white/10 bg-white/5;
+  }
+
+  .glass-card {
+    @apply glass rounded-2xl;
+  }
+
+  .brand-text {
+    @apply bg-gradient-brand bg-clip-text text-transparent;
+  }
+
+  /* Focus ring applied consistently, because keyboard users need to see where
+     they are and the default outline is removed by Tailwind's reset. */
+  .focus-ring {
+    @apply outline-none ring-offset-2 ring-offset-background focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-muted;
+  }
+
+  .skeleton::after {
+    @apply absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/50 to-transparent;
+    content: "";
+  }
+}
+
+/* Slim scrollbars — the default is visually heavy inside chat and sidebar
+   panels, which are the two places this app scrolls most. */
+@layer utilities {
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-primary/25;
+  }
+  .scrollbar-slim::-webkit-scrollbar-thumb:hover {
+    @apply bg-primary/40;
+  }
+}
+
+/* Markdown rendered inside assistant messages. Scoped so it cannot leak into
+   the rest of the UI. */
+.markdown-body {
+  @apply text-[15px] leading-relaxed;
+}
+.markdown-body > * + * {
+  @apply mt-3;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  @apply mt-5 font-semibold text-foreground;
+}
+.markdown-body h1 { @apply text-lg; }
+.markdown-body h2 { @apply text-base; }
+.markdown-body h3 { @apply text-[15px]; }
+.markdown-body ul { @apply list-disc space-y-1.5 pl-5; }
+.markdown-body ol { @apply list-decimal space-y-1.5 pl-5; }
+.markdown-body strong { @apply font-semibold text-foreground; }
+.markdown-body a { @apply text-primary underline underline-offset-2; }
+.markdown-body code {
+  @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[13px];
+}
+.markdown-body pre {
+  @apply overflow-x-auto rounded-xl bg-neutral-900 p-4 text-[13px] text-neutral-100;
+}
+.markdown-body pre code { @apply bg-transparent p-0 text-inherit; }
+.markdown-body blockquote {
+  @apply border-l-4 border-primary/40 bg-primary/5 py-2 pl-4 italic;
+}
+.markdown-body hr { @apply my-4 border-border; }
+/* Tables scroll inside their own container so a wide table never forces the
+   whole page to scroll horizontally on mobile. */
+.markdown-body table {
+  @apply block w-full overflow-x-auto border-collapse text-sm;
+}
+.markdown-body th {
+  @apply border border-border bg-muted px-3 py-2 text-left font-semibold;
+}
+.markdown-body td { @apply border border-border px-3 py-2; }
